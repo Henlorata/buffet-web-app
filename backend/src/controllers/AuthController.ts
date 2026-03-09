@@ -117,3 +117,52 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     }
   }
 };
+
+// GET /api/auth/me (Protected Route)
+export const getMe = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.userId; // From auth middleware
+
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        fullName: true,
+        role: true,
+        createdAt: true,
+      }
+    });
+
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    res.status(200).json(user);
+  } catch (error) {
+    console.error('[GetMe Error]:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// POST /api/auth/logout (Protected Route)
+export const logout = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.userId;
+
+    if (userId) {
+      await redisClient.del(`refresh_token:${userId}`); // Invalidate the refresh token = effectively logout
+    }
+
+    res.status(200).json({ message: 'Logged out successfully' });
+  } catch (error) {
+    console.error('[Logout Error]:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
