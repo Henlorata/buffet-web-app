@@ -1,14 +1,121 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums for fixed values
+enum Role {
+  CUSTOMER
+  BARTENDER
+  ADMIN
+}
+
+enum OrderStatus {
+  CART
+  NEW
+  PREPARING
+  READY
+  COMPLETED
+  CANCELLED
+}
+
+// Database Models
+model User {
+  id           String  @id @default(uuid())
+  email        String  @unique
+  passwordHash String
+  fullName     String
+  role         Role    @default(CUSTOMER)
+  isActive     Boolean @default(true)
+
+  // Relations
+  orders        Order[]    @relation("UserOrders")
+  handledOrders Order[]    @relation("HandledOrders")
+  favorites     Favorite[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Category {
+  id       String  @id @default(uuid())
+  name     String
+  slug     String  @unique
+  imageUrl String?
+
+  // Relations
+  products Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Product {
+  id            String  @id @default(uuid())
+  name          String
+  description   String?
+  price         Int
+  stockQuantity Int     @default(0)
+  imageUrl      String?
+  isActive      Boolean @default(true)
+
+  // Relations
+  categoryId  String
+  category    Category    @relation(fields: [categoryId], references: [id])
+  orderItems  OrderItem[]
+  favoritedBy Favorite[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Favorite {
+  id String @id @default(uuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+}
+
+model Order {
+  id          String      @id @default(uuid())
+  totalAmount Int         @default(0)
+  status      OrderStatus @default(NEW)
+
+  // Customer relation
+  userId String
+  user   User   @relation("UserOrders", fields: [userId], references: [id])
+
+  // Bartender relation
+  handledById String?
+  handledBy   User?   @relation("HandledOrders", fields: [handledById], references: [id])
+
+  // Order items
+  items OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OrderItem {
+  id                  String @id @default(uuid())
+  quantity            Int
+  unitPriceAtPurchase Int
+
+  // Relations
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
 }
