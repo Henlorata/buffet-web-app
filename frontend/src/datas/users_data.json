@@ -1,0 +1,35 @@
+[
+  {
+    "passwd": "123456",
+    "name": "Ütka Pál",
+    "email": "up@gmail.com",
+    "func": "P",
+    "img_url": "https://placeholder.co/500x500/png",
+    "created_at": "2026-02-18 15:41:00",
+    "active": true,
+    "id": "87f96784-f780-41c9-ac79-d81a9d21fb43",
+    "updated_at": null
+  },
+  {
+    "passwd": "123456",
+    "name": "Elvará Zsolt",
+    "email": "ezs@gmail.com",
+    "func": "A",
+    "img_url": "https://placeholder.co/500x500/png",
+    "created_at": "2026-02-17 14:21:00",
+    "active": true,
+    "id": "e9489079-f5e9-4b88-a0b2-14a966cc240d",
+    "updated_at": null
+  },
+  {
+    "passwd": "123456",
+    "name": "Para Zita",
+    "email": "pz@gmail.com",
+    "func": "V",
+    "img_url": "https://placeholder.co/500x500/png",
+    "created_at": "2026-02-22 17:37:00",
+    "active": true,
+    "id": "e83c3a23-1520-4d32-aea4-c3240f5e1266",
+    "updated_at": "2026-03-16 01:07:40.606"
+  }
+]

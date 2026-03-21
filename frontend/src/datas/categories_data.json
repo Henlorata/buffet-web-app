@@ -1,0 +1,30 @@
+[
+  {
+    "id": "21f0190e-bbda-4406-a82a-48586dba66b0",
+    "name": "Sandwiches",
+    "slug": "x",
+    "created_at": "10:34:32.965238",
+    "updated_at": null
+  },
+  {
+    "id": "eda8fcb3-3c0e-411f-932b-5f5bbf5ae041",
+    "name": "Beverages",
+    "slug": "x",
+    "created_at": "10:36:02.420944",
+    "updated_at": null
+  },
+  {
+    "id": "ec43d5ca-9182-46e9-8f8c-8cdc59919b17",
+    "name": "Bakery Products",
+    "slug": "x",
+    "created_at": "20:24:04.620888",
+    "updated_at": null
+  },
+  {
+    "id": "d2486570-6876-49a7-baf3-889773727ed1",
+    "name": "Fruits",
+    "slug": "x",
+    "created_at": "20:33:31.757881",
+    "updated_at": null
+  }
+]
