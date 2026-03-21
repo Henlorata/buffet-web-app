@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
 import { connectRedis } from './lib/redis';
 import authRoutes from './routes/authRoutes';
+import productRoutes from "./routes/productRoutes";
 
 dotenv.config({ path: '../../.env' });
 
@@ -17,6 +18,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/products', productRoutes);
 
 // Health check
 app.get('/api/health', (req: Request, res: Response) => {
