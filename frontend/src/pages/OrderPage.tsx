@@ -1,84 +1,57 @@
-import { useEffect, useState } from 'react';
-import Product from '@/interfaces/Product_Interface';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '@/api/axiosInstance';
+import { Product } from '@/types';
 import ProductCard from '@/components/ProductCard';
-import ShoppingCartModal from '@/components/ShoppingCart';
-import rawProductData from '@/datas/products_data.json';
-import rawCategoryData from '@/datas/categories_data.json';
+import { Loader2, AlertCircle } from 'lucide-react';
 
-const OrderPage: React.FC = () => {
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [products, setProducts] = useState<Product[]>([]);
+export default function OrderPage() {
+  const { data: products, isLoading, isError } = useQuery<Product[]>({
+    queryKey: ['products'],
+    queryFn: async () => {
+      const response = await api.get('/products');
+      return response.data;
+    },
+  });
 
-  useEffect(() => {
-    const loadOrders = () => {
-      const enrichedProducts: Product[] = (rawProductData as Product[])
-        .map(product => {
-          const handler = rawCategoryData.find(c => c.id === product.category_id);
-          return {
-            ...product,
-            category: handler ? handler.name : undefined
-          };
-        });
-      setProducts(enrichedProducts);
-    };
-    loadOrders();
-  }, []);
-
-  useEffect(() => {
-    if (isCartOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isCartOpen]);
-
-  function ProductData(e: React.ChangeEvent<HTMLSelectElement>) {
-    const kiv_kategoria = e.target.value;
-    console.log(kiv_kategoria);
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] text-amber-500 gap-4">
+        <Loader2 className="w-10 h-10 animate-spin" />
+        <p className="text-gray-600 font-medium animate-pulse">Menü betöltése...</p>
+      </div>
+    );
   }
-  
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] text-red-500 gap-4">
+        <AlertCircle className="w-12 h-12" />
+        <p className="text-gray-800 font-medium">Hiba történt a menü betöltésekor. Próbáld újra később!</p>
+      </div>
+    );
+  }
+
   return (
-    <div className='mt-10'>
-      <div className='flex justify-between'>
-        <select name="kategoriak" id="kategoriak" onChange={ ProductData }
-            className="w-full md:w-1/3 px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer">
-              <option className="bg-blue-900">-- All Categories --</option>
-          {products.map((product, index) => (
-            <option key={index} className="bg-blue-900">{product.category}</option>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+        <div>
+          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Aktuális Kínálat</h1>
+          <p className="text-gray-500 mt-2">Válaszd ki a kedvenceidet és rendeld meg sorban állás nélkül!</p>
+        </div>
+
+      </div>
+
+      {products?.length === 0 ? (
+        <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-gray-300">
+          <p className="text-gray-500">Jelenleg nincs elérhető termék a büfében.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {products?.map((product) => (
+            <ProductCard key={product.id} product={product} />
           ))}
-
-        </select>
-        <button className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded cursor-pointer' onClick={() => setIsCartOpen(true)}>🛒</button>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-10 mt-10">
-        {products.map((product, index) => (
-          <ProductCard
-            key={index}
-            id={product.id}
-            name={product.name}
-            price={product.price}
-            category={product.category}
-            img_url={product.img_url}
-            quantity={product.quantity}
-            description={product.description}
-            created_at={product.created_at}
-            updated_at={product.updated_at}
-            active={product.active}
-            category_id={product.category_id}
-          />
-        ))}
-
-        <ShoppingCartModal
-          isOpen={isCartOpen}
-          onClose={() => setIsCartOpen(false)}
-        />
-      </div>
+        </div>
+      )}
     </div>
   );
 }
-
-export default OrderPage;

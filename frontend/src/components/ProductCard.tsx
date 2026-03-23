@@ -1,106 +1,58 @@
-import React, { useEffect, useState } from 'react';
-import Product from '@/interfaces/Product_Interface';
-import MyQuestion from '@/components/MyQuestion';
+import { Plus } from 'lucide-react';
+import { Product } from '@/types';
+import { useCartStore } from '@/store/cartStore';
 
-const ProductCard: React.FC<Product> = ({ id, name, price, quantity, category, description, img_url }) => {
-  const [Qty, setQty] = useState<number>(1);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+interface ProductCardProps {
+  product: Product;
+}
 
-  useEffect(() => {
-      if (isModalOpen) {
-        document.body.style.overflow = 'hidden';
-      } else {
-        document.body.style.overflow = 'unset';
-      }
-      return () => {
-        document.body.style.overflow = 'unset';
-      };
-    }, [isModalOpen]);
+export default function ProductCard({ product }: ProductCardProps) {
+  const addItem = useCartStore((state) => state.addItem);
 
-  const confirmAddToCart = async () => {
-    setIsModalOpen(false);
-    alert(`Product in the cart!`);
-  };
-
-  const denyAddToCart = async () => {
-    setIsModalOpen(false);
-    alert(`Cart is deleted!`);
-  };
-
-  const handleToCart = async () => {
-    let filter : number = 0;
-    if (Qty <= 0) {
-      alert("You can't order this low!");
-      return filter = 1;
-    }
-
-    if (Qty > quantity) {
-      alert(`You can't order this much!`);
-      return filter = 1;
-    }
-
-    if (filter == 0) {
-      setIsModalOpen(true);
-      return filter = 0;
-    }
+  const handleAddToCart = () => {
+    addItem(product, 1);
+    // Később ide teszünk egy szép "Toast" értesítést is!
   };
 
   return (
-    <div id={`${id}`} className="flex flex-col h-full max-w-sm rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300 border border-gray-100 group">
-      <div className="relative h-100 overflow-hidden border-b">
-        <img 
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
-          src={img_url || 'https://via.placeholder.com/300'} 
-          alt={name} 
-        />
+    <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-shadow group flex flex-col">
+      {/* Kép helyőrző (Később a valós képet töltjük be) */}
+      <div className="h-48 w-full bg-slate-100 relative overflow-hidden">
+        {product.imageUrl ? (
+          <img src={product.imageUrl} alt={product.name} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center text-slate-300">
+            <span className="text-sm font-medium">Nincs kép</span>
+          </div>
+        )}
+        {!product.isActive && (
+          <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md">
+            Elfogyott
+          </div>
+        )}
       </div>
 
-      <div className="flex flex-col flex-grow px-5 py-4">
-        <div className="mb-2">
-          <span className="text-blue-600 text-[10px] font-bold uppercase tracking-wider">{category}</span>
-          <h3 className="font-bold text-lg text-gray-100 line-clamp-1">{name}</h3>
-          <p className="text-gray-400 text-sm line-clamp-2">{description}</p>
+      <div className="p-5 flex flex-col flex-grow">
+        <div className="flex justify-between items-start mb-2">
+          <h3 className="text-lg font-bold text-gray-900 line-clamp-1">{product.name}</h3>
+          <span className="text-lg font-extrabold text-amber-600 whitespace-nowrap ml-2">
+            {product.price} Ft
+          </span>
         </div>
 
-        <div className="mt-auto">
-          <div className="text-xl font-extrabold font-mono text-blue-500 mb-4">
-            {price.toLocaleString()} Ft
-          </div>
+        <p className="text-sm text-gray-500 line-clamp-2 flex-grow mb-4">
+          {product.description || 'Friss és finom választás a nap bármely szakában.'}
+        </p>
 
-          <div className="flex items-center gap-2">
-            <input 
-              type="number" 
-              min="1"
-              max={quantity}
-              value={quantity === 0 ? 0 : Qty}
-              onChange={(e) => setQty(parseInt(e.target.value) || 0)}
-              className="w-16 px-2 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-center font-semibold text-gray-400 font-mono"
-            />
-            <p className="text-[15px] text-gray-400 font-semibold mb-1 text-center">DB</p>
-            <button 
-              disabled={quantity === 0}
-              onClick={handleToCart}
-              className={`flex-grow bg-blue-500 hover:bg-blue-600 text-white font-bold py-2.5 px-4 rounded-lg transition-all duration-300 active:scale-95 text-sm cursor-pointer
-                ${quantity === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              Kosárba
-            </button>
-          </div>
-        </div>
+        <button
+          onClick={handleAddToCart}
+          disabled={!product.isActive || product.stockQuantity < 1}
+          className="w-full flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 text-white font-semibold py-2.5 rounded-xl transition-colors"
+        >
+          <Plus className="w-5 h-5" />
+          {product.isActive && product.stockQuantity > 0 ? 'Kosárba' : 'Jelenleg nem elérhető'}
+        </button>
       </div>
-
-      <MyQuestion 
-        isOpen={isModalOpen}
-        title="Active cart found!"
-        description="You already have a previously started cart. Would you like to continue with it?"
-        confirmText="Yes"
-        cancelText="No"
-        onConfirm={confirmAddToCart}
-        onCancel={denyAddToCart}
-        onClose={() => setIsModalOpen(false)}
-      />
     </div>
   );
-};
-
-export default ProductCard;
+}
