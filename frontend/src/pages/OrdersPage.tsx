@@ -4,7 +4,7 @@ import ordersDataRaw from '../Datas/orders_data.json';
 import usersData from '../Datas/users_data.json';
 import Order from '../Interfaces/Order_Interface';
 
-const ViewOrdersPage: React.FC = () => {
+const OrdersPage: React.FC = () => {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrderId, setSelectedOrderId] = useState<string>("");
@@ -122,4 +122,4 @@ const ViewOrdersPage: React.FC = () => {
   );
 }
 
-export default ViewOrdersPage;
+export default OrdersPage;
