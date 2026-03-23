@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import OrderPage from './Pages/Order_Page';
-import ViewOrdersPage from './Pages/ViewOrders_Page';
-import ViewProfilePage from './Pages/VeiwProfile_Page';
+import OrderPage from './pages/OrderPage.tsx';
+import ViewOrdersPage from './pages/ViewOrdersPage.tsx';
+import ViewProfilePage from './pages/ProfilePage.tsx';
 import Navbar  from './Components/Navbar';
 import Footer from './Components/Footer';
-import Home from './Pages/Home_Page';
+import Home from './pages/HomePage.tsx';
 
 export default function App() {
   type TabType = 'Order' | 'viewOrders' | 'Profile' | 'Home';
