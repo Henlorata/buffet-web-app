@@ -1,39 +1,42 @@
-import React, { useState } from 'react';
-import OrderPage from './pages/OrderPage.tsx';
-import ViewOrdersPage from './pages/ViewOrdersPage.tsx';
-import ViewProfilePage from './pages/ProfilePage.tsx';
-import Navbar  from './Components/Navbar';
-import Footer from './Components/Footer';
-import Home from './pages/HomePage.tsx';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import Navbar from './components/Navbar';
+import Footer from './components/Footer';
+
+// Pages
+import HomePage from './pages/HomePage';
+import OrderPage from './pages/OrderPage';
+import OrdersPage from './pages/OrdersPage';
+import ProfilePage from './pages/ProfilePage';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 export default function App() {
-  type TabType = 'Order' | 'viewOrders' | 'Profile' | 'Home';
-  const [activeTab, setActiveTab] = useState<TabType>('Home');
-
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'Home':
-        return <Home />;
-      case 'Order':
-        return <OrderPage />;
-      case 'viewOrders':
-        return <ViewOrdersPage />;
-      case 'Profile':
-        return <ViewProfilePage />;
-    }
-  };
-
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-800 via-gray-900 to-indigo-900 font-sans text-white">
-      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
-      
-      <main className="flex-grow w-full mx-auto p-4 md:p-10">
-        <div className="">
-          {renderContent()}
-        </div>
-      </main>
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <div className="flex flex-col min-h-screen bg-slate-50">
+          <Navbar />
 
-      <Footer />
-    </div>
+          <main className="flex-grow container mx-auto px-4 py-8">
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/order" element={<OrderPage />} />
+              <Route path="/orders" element={<OrdersPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+            </Routes>
+          </main>
+
+          <Footer />
+        </div>
+      </Router>
+    </QueryClientProvider>
   );
 }
