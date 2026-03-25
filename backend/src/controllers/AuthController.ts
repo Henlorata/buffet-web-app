@@ -57,7 +57,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      res.status(400).json({ error: 'Validation failed', details: error.errors });
+      res.status(400).json({ error: 'Validation failed', details: error });
     } else {
       console.error('[Register Error]:', error);
       res.status(500).json({ error: 'Internal server error' });
@@ -110,7 +110,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      res.status(400).json({ error: 'Validation failed', details: error.errors });
+      res.status(400).json({ error: 'Validation failed', details: error});
     } else {
       console.error('[Login Error]:', error);
       res.status(500).json({ error: 'Internal server error' });
