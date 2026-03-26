@@ -12,7 +12,16 @@ const Footer: React.FC = () => {
           <div>
             <h3 className="text-white font-bold text-lg mb-4">Links</h3>
             <ul className="space-y-2 text-sm">
-              <li><button className="hover:text-blue-400 transition-colors cursor-pointer"><a href="https://github.com/Henlorata/buffet-web-app" target="_blank">Github</a></button></li>
+              <li>
+                <button className="hover:text-blue-400 transition-colors cursor-pointer">
+                  <a
+                    href="https://github.com/Henlorata/buffet-web-app"
+                    target="_blank"
+                  >
+                    Github
+                  </a>
+                </button>
+              </li>
             </ul>
           </div>
           <div>
@@ -29,4 +38,4 @@ const Footer: React.FC = () => {
   );
 };
 
-export default Footer
+export default Footer;

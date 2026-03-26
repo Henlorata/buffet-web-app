@@ -1,5 +1,11 @@
-export type Role = 'CUSTOMER' | 'BARTENDER' | 'ADMIN';
-export type OrderStatus = 'CART' | 'NEW' | 'PREPARING' | 'READY' | 'COMPLETED' | 'CANCELLED';
+export type Role = "CUSTOMER" | "BARTENDER" | "ADMIN";
+export type OrderStatus =
+  | "CART"
+  | "NEW"
+  | "PREPARING"
+  | "READY"
+  | "COMPLETED"
+  | "CANCELLED";
 
 export interface User {
   id: string;

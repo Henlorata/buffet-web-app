@@ -1,6 +1,6 @@
-import {Request, Response} from 'express';
-import {z} from 'zod';
-import {prisma} from '../server';
+import { Request, Response } from "express";
+import { z } from "zod";
+import { prisma } from "../server";
 
 // Schemas
 const orderItemSchema = z.object({
@@ -9,20 +9,24 @@ const orderItemSchema = z.object({
 });
 
 const createOrderSchema = z.object({
-  items: z.array(orderItemSchema).min(1, 'Order must contain at least one item'),
+  items: z
+    .array(orderItemSchema)
+    .min(1, "Order must contain at least one item"),
 });
 
 const updateStatusSchema = z.object({
-  status: z.enum(['PREPARING', 'READY', 'COMPLETED', 'CANCELLED']),
+  status: z.enum(["PREPARING", "READY", "COMPLETED", "CANCELLED"]),
 });
 
-
 // POST /api/orders
-export const createOrder = async (req: Request, res: Response): Promise<void> => {
+export const createOrder = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
     const userId = req.user?.userId;
     if (!userId) {
-      res.status(401).json({ error: 'Unauthorized' });
+      res.status(401).json({ error: "Unauthorized" });
       return;
     }
 
@@ -43,7 +47,9 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
         }
 
         if (product.stockQuantity < item.quantity) {
-          throw new Error(`Insufficient stock for ${product.name}. Available: ${product.stockQuantity}`);
+          throw new Error(
+            `Insufficient stock for ${product.name}. Available: ${product.stockQuantity}`,
+          );
         }
 
         totalAmount += product.price * item.quantity;
@@ -64,7 +70,7 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
         data: {
           userId,
           totalAmount,
-          status: 'NEW',
+          status: "NEW",
           items: {
             create: orderItemsData,
           },
@@ -77,15 +83,22 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
       return order;
     });
 
-    res.status(201).json({ message: 'Order placed successfully', order: newOrder });
+    res
+      .status(201)
+      .json({ message: "Order placed successfully", order: newOrder });
   } catch (error: any) {
     if (error instanceof z.ZodError) {
-      res.status(400).json({ error: 'Validation failed', details: error.errors });
-    } else if (error.message.includes('Insufficient stock') || error.message.includes('Product not found')) {
+      res
+        .status(400)
+        .json({ error: "Validation failed", details: error.errors });
+    } else if (
+      error.message.includes("Insufficient stock") ||
+      error.message.includes("Product not found")
+    ) {
       res.status(409).json({ error: error.message });
     } else {
-      console.error('[Create Order Error]:', error);
-      res.status(500).json({ error: 'Internal server error' });
+      console.error("[Create Order Error]:", error);
+      res.status(500).json({ error: "Internal server error" });
     }
   }
 };
@@ -97,36 +110,43 @@ export const getOrders = async (req: Request, res: Response): Promise<void> => {
 
     let orders;
 
-    if (role === 'CUSTOMER') { // Customers only see their own orders
+    if (role === "CUSTOMER") {
+      // Customers only see their own orders
       orders = await prisma.order.findMany({
         where: { userId },
         include: {
-          items: { include: { product: { select: { name: true, imageUrl: true } } } },
+          items: {
+            include: { product: { select: { name: true, imageUrl: true } } },
+          },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
       });
-    } else { // Bartenders and Admins see all active orders (not completed/canceled)
+    } else {
+      // Bartenders and Admins see all active orders (not completed/canceled)
       orders = await prisma.order.findMany({
         where: {
-          status: { in: ['NEW', 'PREPARING', 'READY'] },
+          status: { in: ["NEW", "PREPARING", "READY"] },
         },
         include: {
           user: { select: { fullName: true } },
           items: { include: { product: { select: { name: true } } } },
         },
-        orderBy: { createdAt: 'asc' },
+        orderBy: { createdAt: "asc" },
       });
     }
 
     res.status(200).json(orders);
   } catch (error) {
-    console.error('[Get Orders Error]:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("[Get Orders Error]:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
 // PATCH /api/orders/:id/status
-export const updateOrderStatus = async (req: Request, res: Response): Promise<void> => {
+export const updateOrderStatus = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
     const { id } = req.params;
     const { userId, role } = req.user!;
@@ -138,18 +158,21 @@ export const updateOrderStatus = async (req: Request, res: Response): Promise<vo
     });
 
     if (!order) {
-      res.status(404).json({ error: 'Order not found' });
+      res.status(404).json({ error: "Order not found" });
       return;
     }
 
     // Authorization checks
-    if (role === 'CUSTOMER') { // Customers can ONLY cancel, and ONLY if the order is still 'NEW'
-      if (status !== 'CANCELLED' || order.status !== 'NEW') {
-        res.status(403).json({ error: 'Customers can only cancel orders that are in NEW status' });
+    if (role === "CUSTOMER") {
+      // Customers can ONLY cancel, and ONLY if the order is still 'NEW'
+      if (status !== "CANCELLED" || order.status !== "NEW") {
+        res.status(403).json({
+          error: "Customers can only cancel orders that are in NEW status",
+        });
         return;
       }
       if (order.userId !== userId) {
-        res.status(403).json({ error: 'Cannot modify someone else\'s order' });
+        res.status(403).json({ error: "Cannot modify someone else's order" });
         return;
       }
     }
@@ -157,7 +180,7 @@ export const updateOrderStatus = async (req: Request, res: Response): Promise<vo
     // Process the update
     await prisma.$transaction(async (tx) => {
       // If cancelling, we MUST restock the items
-      if (status === 'CANCELLED' && order.status !== 'CANCELLED') {
+      if (status === "CANCELLED" && order.status !== "CANCELLED") {
         for (const item of order.items) {
           await tx.product.update({
             where: { id: item.productId },
@@ -170,7 +193,7 @@ export const updateOrderStatus = async (req: Request, res: Response): Promise<vo
         where: { id },
         data: {
           status,
-          handledById: role !== 'CUSTOMER' ? userId : undefined, // Record which bartender handled it
+          handledById: role !== "CUSTOMER" ? userId : undefined, // Record which bartender handled it
         },
       });
     });
@@ -178,10 +201,12 @@ export const updateOrderStatus = async (req: Request, res: Response): Promise<vo
     res.status(200).json({ message: `Order status updated to ${status}` });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      res.status(400).json({ error: 'Validation failed', details: error.errors });
+      res
+        .status(400)
+        .json({ error: "Validation failed", details: error.errors });
     } else {
-      console.error('[Update Order Error]:', error);
-      res.status(500).json({ error: 'Internal server error' });
+      console.error("[Update Order Error]:", error);
+      res.status(500).json({ error: "Internal server error" });
     }
   }
 };

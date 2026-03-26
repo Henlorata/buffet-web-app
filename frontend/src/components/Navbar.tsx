@@ -1,6 +1,6 @@
-import { Link, useLocation } from 'react-router-dom';
-import { ShoppingBag, Utensils, User, FileText } from 'lucide-react';
-import { useCartStore } from '@/store/cartStore';
+import { Link, useLocation } from "react-router-dom";
+import { ShoppingBag, Utensils, User, FileText } from "lucide-react";
+import { useCartStore } from "@/store/cartStore";
 
 export default function Navbar() {
   const location = useLocation();
@@ -9,19 +9,31 @@ export default function Navbar() {
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
   const navLinks = [
-    { name: 'Kezdőlap', path: '/', icon: <Utensils className="w-5 h-5" /> },
-    { name: 'Menü & Rendelés', path: '/order', icon: <FileText className="w-5 h-5" /> },
-    { name: 'Rendeléseim', path: '/orders', icon: <ShoppingBag className="w-5 h-5" /> },
+    { name: "Kezdőlap", path: "/", icon: <Utensils className="w-5 h-5" /> },
+    {
+      name: "Menü & Rendelés",
+      path: "/order",
+      icon: <FileText className="w-5 h-5" />,
+    },
+    {
+      name: "Rendeléseim",
+      path: "/orders",
+      icon: <ShoppingBag className="w-5 h-5" />,
+    },
   ];
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 text-amber-600 hover:text-amber-700 transition">
+        <Link
+          to="/"
+          className="flex items-center gap-2 text-amber-600 hover:text-amber-700 transition"
+        >
           <Utensils className="w-8 h-8" />
-          <span className="text-xl font-bold tracking-tight">Buffet<span className="text-gray-800">App</span></span>
+          <span className="text-xl font-bold tracking-tight">
+            Buffet<span className="text-gray-800">App</span>
+          </span>
         </Link>
 
         {/* Desktop Navigation */}
@@ -32,8 +44,8 @@ export default function Navbar() {
               to={link.path}
               className={`flex items-center gap-2 text-sm font-medium transition-colors ${
                 location.pathname === link.path
-                  ? 'text-amber-600'
-                  : 'text-gray-600 hover:text-amber-600'
+                  ? "text-amber-600"
+                  : "text-gray-600 hover:text-amber-600"
               }`}
             >
               {link.icon}
@@ -44,7 +56,10 @@ export default function Navbar() {
 
         {/* User & Cart Actions */}
         <div className="flex items-center gap-4">
-          <Link to="/profile" className="p-2 text-gray-600 hover:text-amber-600 hover:bg-amber-50 rounded-full transition">
+          <Link
+            to="/profile"
+            className="p-2 text-gray-600 hover:text-amber-600 hover:bg-amber-50 rounded-full transition"
+          >
             <User className="w-5 h-5" />
           </Link>
 
