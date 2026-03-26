@@ -3,8 +3,8 @@ const OrdersPage: React.FC = () => {
     <div>
       <div className="flex justify-between items-center mb-8">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-50 p-2">
-          <span className="text-amber-600 font-bold">Total:</span>{" "}
-          <span className="text-gray-600 font-bold">5 pcs</span>
+          <span className="text-amber-600 font-bold">Összesen:</span>{" "}
+          <span className="text-gray-600 font-bold">5 db</span>
         </div>
       </div>
 

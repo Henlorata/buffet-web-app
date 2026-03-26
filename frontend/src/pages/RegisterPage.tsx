@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { UserPlus, ArrowLeft, Mail, Lock, User, Loader2 } from "lucide-react";
 import { api } from "@/api/axiosInstance";
 import { useAuthStore } from "@/store/authStore";
+import { Toaster } from "@/components/ui/sonner";
+import { toast } from "sonner";
 
 export default function RegisterPage() {
   const setAuth = useAuthStore((state) => state.setAuth);
@@ -14,16 +16,18 @@ export default function RegisterPage() {
     password: "",
   });
 
-  const handleRegister = async () => {
+  const handleRegister = async (e: any) => {
+    e.preventDefault();
     setLoading(true);
+
     try {
       const response = await api.post("/auth/register", { formData });
-      const { user, accessToken } = response.data;
+      const { user, accessToken, refreshToken } = response.data;
 
-      setAuth(user, accessToken);
+      setAuth(user, accessToken, refreshToken);
       navigate("/");
     } catch (error: any) {
-      alert(error.response?.data?.error || "Sikertelen regisztráció!");
+      toast.error(error.response?.data?.error || "Sikertelen regisztráció!", {position: "top-center"});
       setLoading(false);
     } finally {
       setLoading(false);
@@ -32,14 +36,6 @@ export default function RegisterPage() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[70vh] animate-in fade-in duration-500">
-      {loading ? (
-        <div className="flex flex-col items-center justify-center min-h-[50vh] text-amber-500 gap-4">
-          <Loader2 className="w-10 h-10 animate-spin" />
-          <p className="text-gray-600 font-medium animate-pulse">
-            Oldal betöltése...
-          </p>
-        </div>
-      ) : (
         <div className="w-full max-w-md bg-white p-8 rounded-3xl shadow-xl border border-gray-100 space-y-8">
           <button
             onClick={() => navigate("/")}
@@ -62,6 +58,7 @@ export default function RegisterPage() {
               <User className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
               <input
                 required
+                disabled={loading}
                 type="text"
                 className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all"
                 placeholder="Teljes név"
@@ -75,6 +72,7 @@ export default function RegisterPage() {
               <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
               <input
                 required
+                disabled={loading}
                 type="email"
                 className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all"
                 placeholder="E-mail cím"
@@ -88,6 +86,7 @@ export default function RegisterPage() {
               <Lock className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
               <input
                 required
+                disabled={loading}
                 type="password"
                 className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all"
                 placeholder="Jelszó"
@@ -101,7 +100,16 @@ export default function RegisterPage() {
               type="submit"
               className="flex items-center justify-center gap-2 w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-xl shadow-md hover:shadow-lg transition-all mt-4 hover:cursor-pointer"
             >
-              <UserPlus className="w-5 h-5" /> Regisztráció
+              {loading ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>Ellenőrzés...</span>
+              </>
+            ) : (
+              <>
+                  <UserPlus className="w-5 h-5" /> Regisztráció
+              </>
+            )}
             </button>
           </form>
 
@@ -110,7 +118,15 @@ export default function RegisterPage() {
             adatkezelési szabályzatot.
           </p>
         </div>
-      )}
+
+        <Toaster toastOptions={{
+        unstyled: true,
+        classNames: {
+          toast: "flex items-center w-full gap-2 p-4 rounded-md bg-red-600/75 text-white border border-red-800 shadow-2xl",
+          title: "text-sm font-medium",
+          icon: "text-amber-500",
+        },
+      }}/>
     </div>
   );
 }
