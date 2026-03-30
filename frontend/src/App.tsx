@@ -1,11 +1,7 @@
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useAuthStore } from "./store/authStore";
+import { Toaster } from "sonner";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
@@ -34,46 +30,30 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <Router>
         <div className="flex flex-col min-h-screen bg-slate-50">
-          {isLoggedIn && <Navbar />}
+
+          <Navbar />
+
           <main className="flex-grow container mx-auto px-4 py-8">
             <Routes>
-              {/* Logged in? */}
-              <Route
-                path="/"
-                element={isLoggedIn ? <HomePage /> : <Navigate to="/login" />}
-              />
+              {/* Public */}
+              <Route path="/" element={<HomePage />} />
+              <Route path="/order" element={<OrderPage />} />
 
-              <Route
-                path="/login"
-                element={!isLoggedIn ? <LoginPage /> : <Navigate to="/" />}
-              />
-              <Route
-                path="/register"
-                element={!isLoggedIn ? <RegisterPage /> : <Navigate to="/" />}
-              />
+              <Route path="/login" element={!isLoggedIn ? <LoginPage /> : <Navigate to="/order" />} />
+              <Route path="/register" element={!isLoggedIn ? <RegisterPage /> : <Navigate to="/order" />} />
 
-              {/* Protected Routes */}
-              <Route
-                path="/order"
-                element={isLoggedIn ? <OrderPage /> : <Navigate to="/login" />}
-              />
-              <Route
-                path="/orders"
-                element={isLoggedIn ? <OrdersPage /> : <Navigate to="/login" />}
-              />
-              <Route
-                path="/profile"
-                element={
-                  isLoggedIn ? <ProfilePage /> : <Navigate to="/login" />
-                }
-              />
+              {/* Private */}
+              <Route path="/orders" element={isLoggedIn ? <OrdersPage /> : <Navigate to="/login" />} />
+              <Route path="/profile" element={isLoggedIn ? <ProfilePage /> : <Navigate to="/login" />} />
 
-              {/* Catch-all */}
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </main>
+
           <Footer />
         </div>
+
+        <Toaster richColors position="top-center" />
       </Router>
     </QueryClientProvider>
   );
