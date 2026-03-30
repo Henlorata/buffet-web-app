@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { register, login, getMe, logout } from "../controllers/AuthController";
+import {register, login, getMe, logout, refresh} from "../controllers/AuthController";
 import { requireAuth } from "../middlewares/requireAuth";
 
 const router = Router();
@@ -7,6 +7,7 @@ const router = Router();
 // Public routes
 router.post("/register", register);
 router.post("/login", login);
+router.post("/refresh", refresh);
 
 // Protected routes
 router.get("/me", requireAuth, getMe);

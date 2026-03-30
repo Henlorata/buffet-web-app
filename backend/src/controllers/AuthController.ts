@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "../server";
 import { generateAccessToken, generateRefreshToken } from "../utils/jwt";
 import { redisClient } from "../lib/redis";
+import jwt from "jsonwebtoken";
 
 // Input validation
 const registerSchema = z.object({
@@ -47,6 +48,13 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       refreshToken,
     ); // 7 days expiration
 
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+
     // Response
     res.status(201).json({
       message: "User registered successfully",
@@ -57,7 +65,6 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         role: newUser.role,
       },
       accessToken,
-      refreshToken, // I WILL MOVE THIS TO HTTP-ONLY COOKIE IN PRODUCTION
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -103,6 +110,13 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
     await redisClient.setEx(`refresh_token:${user.id}`, 604800, refreshToken);
 
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+
     // Response
     res.status(200).json({
       message: "Login successful",
@@ -113,7 +127,6 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         role: user.role,
       },
       accessToken,
-      refreshToken,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -166,10 +179,28 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
     if (userId) {
       await redisClient.del(`refresh_token:${userId}`); // Invalidate the refresh token = effectively logout
     }
+    res.clearCookie('refreshToken');
 
     res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
     console.error("[Logout Error]:", error);
     res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const refresh = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) {
+      res.status(401).json({ error: 'No refresh token found' });
+      return;
+    }
+
+    const payload = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET!) as any;
+    const newAccessToken = generateAccessToken(payload.userId, payload.role);
+
+    res.status(200).json({ accessToken: newAccessToken });
+  } catch (error) {
+    res.status(401).json({ error: 'Invalid refresh token' });
   }
 };

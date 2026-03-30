@@ -1,12 +1,11 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { User } from "../types";
+import { User } from "@/types";
 
 interface AuthState {
   user: User | null;
   accessToken: string | null;
-  refreshToken: string | null;
-  setAuth: (user: User, accesstoken: string, refreshtoken: string) => void;
+  setAuth: (user: User, accessToken: string) => void;
   logout: () => void;
 }
 
@@ -15,12 +14,11 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       user: null,
       accessToken: null,
-      refreshToken: null,
-      setAuth: (user, token) => set({ user, accessToken: token }),
+      setAuth: (user, accessToken) => set({ user, accessToken }),
       logout: () => set({ user: null, accessToken: null }),
     }),
     {
       name: "buffet-auth-storage",
     },
-  ),
+  )
 );
