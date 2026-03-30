@@ -1,17 +1,19 @@
-import { Link, useLocation } from 'react-router-dom';
-import { ShoppingBag, Utensils, User, FileText } from 'lucide-react';
-import { useCartStore } from '@/store/cartStore';
+import {Link, useLocation} from 'react-router-dom';
+import {ShoppingBag, Utensils, User, FileText} from 'lucide-react';
+import {useCartStore} from '../store/cartStore';
+import {useAuthStore} from '../store/authStore';
 
 export default function Navbar() {
   const location = useLocation();
   const cartItems = useCartStore((state) => state.items);
+  const user = useAuthStore((state) => state.user);
 
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
   const navLinks = [
-    { name: 'Kezdőlap', path: '/', icon: <Utensils className="w-5 h-5" /> },
-    { name: 'Menü & Rendelés', path: '/order', icon: <FileText className="w-5 h-5" /> },
-    { name: 'Rendeléseim', path: '/orders', icon: <ShoppingBag className="w-5 h-5" /> },
+    {name: 'Kezdőlap', path: '/', icon: <Utensils className="w-5 h-5"/>},
+    {name: 'Menü & Rendelés', path: '/order', icon: <FileText className="w-5 h-5"/>},
+    {name: 'Rendeléseim', path: '/orders', icon: <ShoppingBag className="w-5 h-5"/>},
   ];
 
   return (
@@ -20,7 +22,7 @@ export default function Navbar() {
 
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 text-amber-600 hover:text-amber-700 transition">
-          <Utensils className="w-8 h-8" />
+          <Utensils className="w-8 h-8"/>
           <span className="text-xl font-bold tracking-tight">Buffet<span className="text-gray-800">App</span></span>
         </Link>
 
@@ -44,14 +46,24 @@ export default function Navbar() {
 
         {/* User & Cart Actions */}
         <div className="flex items-center gap-4">
-          <Link to="/profile" className="p-2 text-gray-600 hover:text-amber-600 hover:bg-amber-50 rounded-full transition">
-            <User className="w-5 h-5" />
-          </Link>
+          {user ? (
+            <Link to="/profile"
+                  className="p-2 text-gray-600 hover:text-amber-600 hover:bg-amber-50 rounded-full transition"
+                  title="Profil">
+              <User className="w-5 h-5"/>
+            </Link>
+          ) : (
+            <Link to="/login"
+                  className="hidden sm:inline-flex items-center justify-center bg-amber-100 hover:bg-amber-200 text-amber-900 text-sm font-bold px-4 py-2 rounded-full transition">
+              Bejelentkezés
+            </Link>
+          )}
 
           <button className="relative p-2 text-gray-600 hover:text-amber-600 hover:bg-amber-50 rounded-full transition">
-            <ShoppingBag className="w-5 h-5" />
+            <ShoppingBag className="w-5 h-5"/>
             {cartCount > 0 && (
-              <span className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 bg-amber-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
+              <span
+                className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 bg-amber-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
                 {cartCount}
               </span>
             )}
