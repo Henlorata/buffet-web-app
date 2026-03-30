@@ -1,6 +1,6 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import { Product } from "../types";
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { Product } from '../types';
 
 export interface CartItem {
   product: Product;
@@ -21,9 +21,7 @@ export const useCartStore = create<CartState>()(
       items: [],
       addItem: (product, quantity = 1) => {
         const currentItems = get().items;
-        const existingItem = currentItems.find(
-          (item) => item.product.id === product.id,
-        );
+        const existingItem = currentItems.find((item) => item.product.id === product.id);
 
         if (existingItem) {
           // Ha már van a kosárban, csak növeljük a mennyiséget
@@ -31,7 +29,7 @@ export const useCartStore = create<CartState>()(
             items: currentItems.map((item) =>
               item.product.id === product.id
                 ? { ...item, quantity: item.quantity + quantity }
-                : item,
+                : item
             ),
           });
         } else {
@@ -39,20 +37,15 @@ export const useCartStore = create<CartState>()(
         }
       },
       removeItem: (productId) => {
-        set({
-          items: get().items.filter((item) => item.product.id !== productId),
-        });
+        set({ items: get().items.filter((item) => item.product.id !== productId) });
       },
       clearCart: () => set({ items: [] }),
       getTotalPrice: () => {
-        return get().items.reduce(
-          (total, item) => total + item.product.price * item.quantity,
-          0,
-        );
+        return get().items.reduce((total, item) => total + item.product.price * item.quantity, 0);
       },
     }),
     {
-      name: "buffet-cart-storage",
-    },
-  ),
+      name: 'buffet-cart-storage',
+    }
+  )
 );
