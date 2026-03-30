@@ -11,12 +11,10 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   const handleAddToCart = () => {
     addItem(product, 1);
-    // Később ide teszünk egy szép "Toast" értesítést is!
   };
 
   return (
     <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-shadow group flex flex-col">
-      {/* Kép helyőrző (Később a valós képet töltjük be) */}
       <div className="h-48 w-full bg-slate-100 relative overflow-hidden">
         {product.imageUrl ? (
           <img src={product.imageUrl} alt={product.name} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
