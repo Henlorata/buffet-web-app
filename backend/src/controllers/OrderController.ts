@@ -4,7 +4,7 @@ import { prisma } from "../server";
 
 // Schemas
 const orderItemSchema = z.object({
-  productId: z.uuid(),
+  productId: z.string(),
   quantity: z.number().int().positive(),
 });
 
