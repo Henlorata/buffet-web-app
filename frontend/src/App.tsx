@@ -12,6 +12,10 @@ import OrdersPage from "./pages/OrdersPage";
 import ProfilePage from "./pages/ProfilePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import BartOrders from "./pages/BartOrders";
+import Users from "./pages/Users";
+import AdminOrders from "./pages/AdminOrders";
+import Products from "./pages/Products";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,12 +43,16 @@ export default function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/order" element={<OrderPage />} />
 
-              <Route path="/login" element={!isLoggedIn ? <LoginPage /> : <Navigate to="/order" />} />
-              <Route path="/register" element={!isLoggedIn ? <RegisterPage /> : <Navigate to="/order" />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
 
               {/* Private */}
               <Route path="/orders" element={isLoggedIn ? <OrdersPage /> : <Navigate to="/login" />} />
               <Route path="/profile" element={isLoggedIn ? <ProfilePage /> : <Navigate to="/login" />} />
+              <Route path="/bart-orders" element={isLoggedIn ? <BartOrders /> : <Navigate to="/login" />} />
+              <Route path="/users" element={isLoggedIn ? <Users /> : <Navigate to="/login" />} />
+              <Route path="/admin-orders" element={isLoggedIn ? <AdminOrders /> : <Navigate to="/login" />} />
+              <Route path="/products" element={isLoggedIn ? <Products /> : <Navigate to="/login" />} />
 
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>

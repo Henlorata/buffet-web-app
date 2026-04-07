@@ -30,9 +30,9 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterForm) => {
     try {
       const response = await api.post("/auth/register", data);
-      const { user, accessToken, refreshToken } = response.data;
+      const { user, accessToken} = response.data;
 
-      setAuth(user, accessToken, refreshToken);
+      setAuth(user, accessToken);
       toast.success("Sikeres regisztráció! Üdvözlünk a rendszerben!");
       navigate("/order");
     } catch (error: any) {

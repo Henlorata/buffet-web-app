@@ -29,11 +29,22 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginForm) => {
     try {
       const response = await api.post("/auth/login", data);
-      const { user, accessToken, refreshToken } = response.data;
+      const { user, accessToken } = response.data;
 
-      setAuth(user, accessToken, refreshToken);
+      setAuth(user, accessToken);
       toast.success("Sikeres bejelentkezés!");
-      navigate("/order");
+      if (user.role === "ADMIN") {
+        navigate("/users");
+        return;
+      }
+      if (user.role === "BARTENDER") {
+        navigate("/bart-orders");
+        return;
+      }
+      else {
+        navigate("/order");
+        return;
+      }
     } catch (error: any) {
       toast.error(error.response?.data?.error || "Helytelen e-mail cím vagy jelszó!");
     }
