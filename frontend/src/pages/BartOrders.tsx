@@ -22,7 +22,7 @@ export default function BartOrders() {
     loadOrder();
 
     socket.on("new-order-received", (newOrder: Order) => {
-      setOrders((prev) => [newOrder, ...prev]); // Az elejére szúrjuk be
+      setOrders((prev) => [newOrder, ...prev]);
       toast.info("Új rendelés érkezett!", {
         description: `${newOrder.user.fullName} rendelt valamit.`
       });
@@ -74,7 +74,7 @@ export default function BartOrders() {
                   <th className="px-6 py-4">Vásárló / Pultos</th>
                   <th className="px-6 py-4">Termékek</th>
                   <th className="px-6 py-4">Összeg</th>
-                  <th className="px-6 py-4">Státusz</th>
+                  <th className="px-6 py-4 bg-amber-100">Státusz</th>
                   <th className="px-6 py-4">Rendelés Időpontja</th>
                   <th className="px-6 py-4">Utolsó módosítás</th>
                 </tr>
@@ -89,7 +89,7 @@ export default function BartOrders() {
                           {order.user.fullName}
                         </div>
                         <div className="text-xs text-gray-400 pl-6">
-                          Kiszolgálja: {order.handledBy?.fullName || "Még senki..."}
+                          Készíti: <u>{order.handledBy?.fullName || "Még senki..."}</u>
                         </div>
                       </div>
                     </td>
@@ -109,14 +109,14 @@ export default function BartOrders() {
                       <span className="font-bold text-gray-900">{order.totalAmount.toLocaleString()} Ft</span>
                     </td>
 
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 bg-amber-50">
                       <select
                         className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border cursor-pointer outline-none
                           ${order.status === 'READY' 
-                            ? 'bg-green-50 text-green-600 border-green-100'
+                            ? 'bg-green-50 text-green-600 border-green-300'
                             : order.status === 'PREPARING'
-                            ? 'bg-blue-50 text-blue-600 border-blue-100' 
-                            : 'bg-amber-50 text-amber-600 border-amber-100'}`}
+                            ? 'bg-blue-50 text-blue-600 border-blue-300' 
+                            : 'bg-red-50 text-red-600 border-red-300'}`}
                         value={order.status}
                         onChange={(e) => handlePatch(order.id, e)}
                       >
