@@ -3,6 +3,9 @@ import { Order } from "@/types";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { User } from 'lucide-react';
+import { io } from "socket.io-client";
+
+const socket = io("http://localhost:5000");
 
 export default function BartOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -17,6 +20,24 @@ export default function BartOrders() {
       }
     };
     loadOrder();
+
+    socket.on("new-order-received", (newOrder: Order) => {
+      setOrders((prev) => [newOrder, ...prev]); // Az elejére szúrjuk be
+      toast.info("Új rendelés érkezett!", {
+        description: `${newOrder.user.fullName} rendelt valamit.`
+      });
+    });
+
+    socket.on("order-status-updated", (updatedOrder: Order) => {
+      setOrders((prev) =>
+        prev.map((o) => (o.id === updatedOrder.id ? updatedOrder : o))
+      );
+    });
+
+    return () => {
+      socket.off("new-order-received");
+      socket.off("order-status-updated");
+    };
   }, []);
 
   const handlePatch = async (orderID: string, e: React.ChangeEvent<HTMLSelectElement>) => {

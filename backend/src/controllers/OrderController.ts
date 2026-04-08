@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { z } from "zod";
 import { prisma } from "../server";
+import { io } from "../server";
 
 // Schemas
 const orderItemSchema = z.object({
@@ -86,6 +87,7 @@ export const createOrder = async (
     res
       .status(201)
       .json({ message: "Order placed successfully", order: newOrder });
+  io.emit("new-order-received", newOrder);
   } catch (error: any) {
     if (error instanceof z.ZodError) {
       res
@@ -209,6 +211,7 @@ export const updateOrderStatus = async (
     });
 
     res.status(200).json({ message: `Order status updated to ${status}`, order: updatedOrder });
+    io.emit("order-status-updated", updatedOrder);
   } catch (error) {
     if (error instanceof z.ZodError) {
       res
