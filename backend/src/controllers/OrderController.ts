@@ -130,6 +130,7 @@ export const getOrders = async (req: Request, res: Response): Promise<void> => {
         include: {
           user: { select: { fullName: true } },
           items: { include: { product: { select: { name: true } } } },
+          handledBy: { select: { fullName: true } },
         },
         orderBy: { createdAt: "asc" },
       });
@@ -198,7 +199,16 @@ export const updateOrderStatus = async (
       });
     });
 
-    res.status(200).json({ message: `Order status updated to ${status}` });
+    const updatedOrder = await prisma.order.findUnique({
+      where: { id },
+      include: {
+        user: { select: { fullName: true } },
+        handledBy: { select: { fullName: true } }, // Behozzuk a pultos nevét is!
+        items: { include: { product: { select: { name: true } } } },
+      }
+    });
+
+    res.status(200).json({ message: `Order status updated to ${status}`, order: updatedOrder });
   } catch (error) {
     if (error instanceof z.ZodError) {
       res
