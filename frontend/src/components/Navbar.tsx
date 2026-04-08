@@ -13,7 +13,7 @@ export default function Navbar() {
   const navLinks = [
   { 
     name: 'Kezdőlap', 
-    path: '/', 
+    path: '/home', 
     icon: <Utensils className="w-5 h-5"/>,
     hiddenFor: ['BARTENDER', 'ADMIN']
   },

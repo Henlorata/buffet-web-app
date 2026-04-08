@@ -28,6 +28,7 @@ const queryClient = new QueryClient({
 
 export default function App() {
   const accessToken = useAuthStore((state) => state.accessToken);
+  const user = useAuthStore((state) => state.user);
   const isLoggedIn = !!accessToken;
 
   return (
@@ -40,21 +41,21 @@ export default function App() {
           <main className="flex-grow container mx-auto px-4 py-8">
             <Routes>
               {/* Public */}
-              <Route path="/" element={<HomePage />} />
+              <Route path="/home" element={<HomePage />} />
               <Route path="/order" element={<OrderPage />} />
 
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
 
               {/* Private */}
-              <Route path="/orders" element={isLoggedIn ? <OrdersPage /> : <Navigate to="/login" />} />
-              <Route path="/profile" element={isLoggedIn ? <ProfilePage /> : <Navigate to="/login" />} />
-              <Route path="/bart-orders" element={isLoggedIn ? <BartOrders /> : <Navigate to="/login" />} />
-              <Route path="/users" element={isLoggedIn ? <Users /> : <Navigate to="/login" />} />
-              <Route path="/admin-orders" element={isLoggedIn ? <AdminOrders /> : <Navigate to="/login" />} />
-              <Route path="/products" element={isLoggedIn ? <Products /> : <Navigate to="/login" />} />
+              <Route path="/orders" element={isLoggedIn && (user?.role === "BARTENDER" || user?.role === "CUSTOMER") ? <OrdersPage /> : <Navigate to="/profile" />} />
+              <Route path="/profile" element={isLoggedIn  ? <ProfilePage /> : <Navigate to="/login" />} />
+              <Route path="/bart-orders" element={isLoggedIn && (user?.role === "BARTENDER") ? <BartOrders /> : <Navigate to="/profile" />} />
+              <Route path="/users" element={isLoggedIn && (user?.role === "ADMIN") ? <Users /> : <Navigate to="/profile" />} />
+              <Route path="/admin-orders" element={isLoggedIn && (user?.role === "ADMIN") ? <AdminOrders /> : <Navigate to="/profile" />} />
+              <Route path="/products" element={isLoggedIn && (user?.role === "ADMIN") ? <Products /> : <Navigate to="/profile" />} />
 
-              <Route path="*" element={<Navigate to="/" />} />
+              <Route path="*" element={<Navigate to="/profile" />} />
             </Routes>
           </main>
 
