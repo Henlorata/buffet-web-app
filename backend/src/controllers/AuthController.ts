@@ -5,6 +5,7 @@ import { prisma } from "../server";
 import { generateAccessToken, generateRefreshToken } from "../utils/jwt";
 import { redisClient } from "../lib/redis";
 import jwt from "jsonwebtoken";
+import { io } from "../server";
 
 // Input validation
 const registerSchema = z.object({
@@ -66,6 +67,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       },
       accessToken,
     });
+    io.emit("new-user-registered", newUser);
   } catch (error) {
     if (error instanceof z.ZodError) {
       res.status(400).json({ error: "Validation failed", details: error });

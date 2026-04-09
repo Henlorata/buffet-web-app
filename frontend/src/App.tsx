@@ -40,21 +40,25 @@ export default function App() {
 
           <main className="flex-grow container mx-auto px-4 py-8">
             <Routes>
-              {/* Public */}
-              <Route path="/home" element={<HomePage />} />
-              <Route path="/order" element={<OrderPage />} />
+              {/* Login & Register */}
+              <Route path="/login" element={isLoggedIn ? <Navigate to="/profile" /> : <LoginPage />} />
+              <Route path="/register" element={isLoggedIn ? <Navigate to="/profile" /> : <RegisterPage />} />
 
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
+              {/* COSTUMER */}
+              <Route path="/home" element={isLoggedIn && (user?.role === "BARTENDER" || user?.role === "ADMIN") ? <Navigate to="/profile" /> : <HomePage />} /> {/* GUEST TOO */}
+              <Route path="/order" element={isLoggedIn && (user?.role === "ADMIN") ? <Navigate to="/profile" /> : <OrderPage />} /> {/* BARTENDER TOO */}
+              <Route path="/orders" element={isLoggedIn && (user?.role === "BARTENDER" || user?.role === "CUSTOMER") ? <OrdersPage /> : <Navigate to="/profile" />} /> {/* BARTENDER TOO */}
 
-              {/* Private */}
-              <Route path="/orders" element={isLoggedIn && (user?.role === "BARTENDER" || user?.role === "CUSTOMER") ? <OrdersPage /> : <Navigate to="/profile" />} />
-              <Route path="/profile" element={isLoggedIn  ? <ProfilePage /> : <Navigate to="/login" />} />
+              {/* BARTENDER */}
               <Route path="/bart-orders" element={isLoggedIn && (user?.role === "BARTENDER") ? <BartOrders /> : <Navigate to="/profile" />} />
+
+              {/* ADMIN */}
               <Route path="/users" element={isLoggedIn && (user?.role === "ADMIN") ? <Users /> : <Navigate to="/profile" />} />
               <Route path="/admin-orders" element={isLoggedIn && (user?.role === "ADMIN") ? <AdminOrders /> : <Navigate to="/profile" />} />
               <Route path="/products" element={isLoggedIn && (user?.role === "ADMIN") ? <Products /> : <Navigate to="/profile" />} />
-
+              
+              {/* DEFAULT */}
+              <Route path="/profile" element={isLoggedIn ? <ProfilePage /> : <Navigate to="/login" />} />
               <Route path="*" element={<Navigate to="/profile" />} />
             </Routes>
           </main>

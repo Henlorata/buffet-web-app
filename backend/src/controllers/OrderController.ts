@@ -88,6 +88,7 @@ export const createOrder = async (
       .status(201)
       .json({ message: "Order placed successfully", order: newOrder });
   io.emit("new-order-received", newOrder);
+  io.emit("product-quantity-changed", newOrder.items.map(i => ({ productId: i.productId, newStock: i.quantity })));
   } catch (error: any) {
     if (error instanceof z.ZodError) {
       res
@@ -205,7 +206,7 @@ export const updateOrderStatus = async (
       where: { id },
       include: {
         user: { select: { fullName: true } },
-        handledBy: { select: { fullName: true } }, // Behozzuk a pultos nevét is!
+        handledBy: { select: { fullName: true } }, // Bartender's name
         items: { include: { product: { select: { name: true } } } },
       }
     });

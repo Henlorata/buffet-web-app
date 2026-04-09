@@ -111,7 +111,7 @@ const ViewProfilePage: React.FC = () => {
             </div>
           </div>
 
-          <div className="mt-10 pt-6 border-t border-gray-100 flex justify-between gap-4">
+          <div className="mt-10 pt-6 border-t border-gray-100 flex justify-between gap-2">
              <button onClick={handleSave} className="bg-blue-500 hover:bg-blue-800 text-white px-8 py-3 rounded-xl font-medium transition-all active:scale-95 cursor-pointer">Mentés</button>
              <button onClick={() => toast.info("SÖTÉT!")} className="bg-gray-500 hover:bg-gray-800 text-white px-8 py-3 rounded-xl font-medium transition-all active:scale-95 cursor-pointer">🌜</button>
              <button onClick={handleLogout} className="bg-red-500 hover:bg-red-800 text-white px-8 py-3 rounded-xl font-medium transition-all active:scale-95 cursor-pointer">Kijelentkezés</button>

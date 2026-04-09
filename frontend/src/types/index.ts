@@ -24,10 +24,12 @@ export interface Product {
   stockQuantity: number;
   imageUrl: string | null;
   isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
   category?: {
     name: string;
     slug: string;
-  };
+  } | null;
 }
 
 export interface Order {

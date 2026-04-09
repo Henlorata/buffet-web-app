@@ -1,5 +1,5 @@
 import {Link, useLocation} from 'react-router-dom';
-import {ShoppingBag, Utensils, User as UserIcon, FileText, WalletCards} from 'lucide-react';
+import {ShoppingBag, Utensils, User as UserIcon, FileText, WalletCards, Barrel} from 'lucide-react';
 import {useCartStore} from '../store/cartStore';
 import {useAuthStore} from '../store/authStore';
 
@@ -11,49 +11,49 @@ export default function Navbar() {
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
   const navLinks = [
-  { 
-    name: 'Kezdőlap', 
-    path: '/home', 
-    icon: <Utensils className="w-5 h-5"/>,
-    hiddenFor: ['BARTENDER', 'ADMIN']
-  },
-  { 
-    name: 'Vásárlói Rendelések', 
-    path: '/bart-orders', 
-    icon: <WalletCards className="w-5 h-5"/>,
-    roles: ['BARTENDER']
-  },
-  { 
-    name: 'Menü & Rendelés', 
-    path: '/order', 
-    icon: <FileText className="w-5 h-5"/>,
-    hiddenFor: ['ADMIN']
-  },
-  { 
-    name: 'Rendeléseim', 
-    path: '/orders', 
-    icon: <ShoppingBag className="w-5 h-5"/>,
-    roles: ['CUSTOMER', 'BARTENDER']
-  },
-  { 
-    name: 'Felhasználók', 
-    path: '/users', 
-    icon: <UserIcon className="w-5 h-5"/>,
-    roles: ['ADMIN']
-  },
-  { 
-    name: 'Termékek', 
-    path: '/products', 
-    icon: <FileText className="w-5 h-5"/>,
-    roles: ['ADMIN']
-  },
-  { 
-    name: 'Rendelések', 
-    path: '/admin-orders', 
-    icon: <FileText className="w-5 h-5"/>,
-    roles: ['ADMIN']
-  }
-];
+    { 
+      name: 'Kezdőlap', 
+      path: '/home', 
+      icon: <Utensils className="w-5 h-5"/>,
+      hiddenFor: ['BARTENDER', 'ADMIN']
+    },
+    { 
+      name: 'Vásárlói Rendelések', 
+      path: '/bart-orders', 
+      icon: <WalletCards className="w-5 h-5"/>,
+      roles: ['BARTENDER']
+    },
+    { 
+      name: 'Menü & Rendelés', 
+      path: '/order', 
+      icon: <FileText className="w-5 h-5"/>,
+      hiddenFor: ['ADMIN']
+    },
+    { 
+      name: 'Rendeléseim', 
+      path: '/orders', 
+      icon: <ShoppingBag className="w-5 h-5"/>,
+      roles: ['CUSTOMER', 'BARTENDER']
+    },
+    { 
+      name: 'Felhasználók', 
+      path: '/users', 
+      icon: <UserIcon className="w-5 h-5"/>,
+      roles: ['ADMIN']
+    },
+    { 
+      name: 'Termékek', 
+      path: '/products', 
+      icon: <Barrel className="w-5 h-5"/>,
+      roles: ['ADMIN']
+    },
+    { 
+      name: 'Rendelések', 
+      path: '/admin-orders', 
+      icon: <FileText className="w-5 h-5"/>,
+      roles: ['ADMIN']
+    }
+  ];
 
 const visibleLinks = navLinks.filter(link => {
   let userRole;
@@ -70,7 +70,7 @@ const visibleLinks = navLinks.filter(link => {
   if (link.roles && !link.roles.includes(userRole)) return false;
 
   // default: show the link
-  return link;
+  return true;
 });
 
   return (
@@ -84,7 +84,7 @@ const visibleLinks = navLinks.filter(link => {
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-8">
+        <nav className="md:flex items-center gap-8">
           {visibleLinks.map((link) => (
             <Link
               key={link.path}
