@@ -1,5 +1,5 @@
 import { api } from "@/api/axiosInstance";
-import { Product } from "@/types";
+import { Category, Product } from "@/types";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Package, Pencil, Save, X } from 'lucide-react';
@@ -15,13 +15,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useForm } from "react-hook-form";
 
 const socket = io("http://localhost:5000");
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  type NewProductForm = {
+    name: string;
+    category: string;
+    price: number;
+    stockQuantity: number;
+    description?: string;
+  };
+  const { register, handleSubmit } = useForm<NewProductForm>();
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -32,6 +42,17 @@ export default function ProductsPage() {
         toast.error("Hiba a betöltéskor");
       }
     };
+
+    const loadCategories = async () => {
+      try {
+        const response = await api.get("/products/categories");
+        setCategories(response.data);
+      } catch (error) {
+        toast.error("Hiba a kategóriák betöltésekor");
+      }
+    };
+
+    loadCategories();
     loadProducts();
 
     socket.on("product-quantity-changed", (updatedProduct: Product) => {
@@ -53,7 +74,7 @@ export default function ProductsPage() {
     setIsDialogOpen(true);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLSelectElement>) => {
     if (!selectedProduct) return;
     const { name, value } = e.target;
     setSelectedProduct({
@@ -64,12 +85,26 @@ export default function ProductsPage() {
 
   const handleSaveChanges = async () => {
     if (!selectedProduct) return;
+    if (selectedProduct.stockQuantity < 0 || selectedProduct.price < 0 || selectedProduct.name.trim() === "" || !selectedProduct.category?.name) {
+      toast.error("Kérem töltse ki az összes mezőt!");
+      return;
+    }
     try {
       await api.patch(`/products/${selectedProduct.id}`, selectedProduct);
       toast.success("Termék sikeresen frissítve!");
       setIsDialogOpen(false);
     } catch (error) {
       toast.error("Hiba történt a mentés során.");
+      console.log(selectedProduct);
+    }
+  };
+
+    const onSubmit = async (data: NewProductForm) => {
+    try {
+      await api.post("/products", data);
+      toast.success("Termék sikeresen felvéve!");
+    } catch (error) {
+      toast.error("Hiba történt a felvétel során.");
     }
   };
 
@@ -144,25 +179,27 @@ export default function ProductsPage() {
 
       <div className="text-center md:text-left">
         <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">
-          Termék <span className="text-amber-500">Hozzáadása</span>
+          Új Termék <span className="text-amber-500">Felvétele</span>
         </h2>
       </div>
 
-      <div>
-        <form action="NewProduct">
-          <input type="text" placeholder="Megnevezés" required/>
-          <input type="text" placeholder="Kategória" required/>
-          <input type="number" placeholder="Ár" required/>
-          <input type="number" placeholder="Készlet" required/>
-          <input type="text" placeholder="Leírás"/>
-          <button type="submit">Hozzáadás</button>
+      <div className="bg-gray-50 rounded-3xl border-2 border-gray-200 p-5">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex justify-between flex-wrap gap-4">
+          <input type="text" placeholder="Megnevezés" required {...register("name")} className="border border-gray-300 rounded-xl py-2 px-4 focus:outline-none focus:ring-2 focus:ring-amber-500"/>
+          <input type="text" placeholder="Kategória" required {...register("category")} className="border border-gray-300 rounded-xl py-2 px-4 focus:outline-none focus:ring-2 focus:ring-amber-500"/>
+          <input type="number" placeholder="Ár" required {...register("price", { valueAsNumber: true })} className="border border-gray-300 rounded-xl py-2 px-4 focus:outline-none focus:ring-2 focus:ring-amber-500"/>
+          <input type="number" placeholder="Készlet" required {...register("stockQuantity", { valueAsNumber: true })} className="border border-gray-300 rounded-xl py-2 px-4 focus:outline-none focus:ring-2 focus:ring-amber-500"/>
+          <input type="text" placeholder="Leírás" {...register("description")} className="border border-gray-300 rounded-xl py-2 px-4 focus:outline-none focus:ring-2 focus:ring-amber-500"/>
+          <button type="submit" className="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-4 rounded-xl transition-colors cursor-pointer">
+            Felvétel
+          </button>
         </form>
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[500px] rounded-3xl border-none shadow-2xl bg-white">
+        <DialogContent className="sm:max-w-[500px] rounded-3xl border-none shadow-2xl bg-white" aria-describedby="">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+            <DialogTitle className="text-2xl font-bold flex items-center gap-2 border-b border-gray-300 pb-4">
               <Pencil className="w-6 h-6 text-amber-500" />
               Termék <span className="text-amber-500">Szerkesztése</span>
             </DialogTitle>
@@ -206,19 +243,8 @@ export default function ProductsPage() {
                 </div>
               </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="isActive" className="text-gray-600 ml-1">Leírás</Label>
-                <Input
-                  id="description"
-                  name="description"
-                  value={selectedProduct.description || ""}
-                  onChange={handleInputChange}
-                  className="rounded-xl border-gray-200 focus:ring-amber-500 focus:border-amber-500"
-                />
-              </div>
-
-              <div className="flex justify-center">
-                <div className="flex items-center gap-4 rounded-xl border border-gray-100 bg-gray-50/50 w-fit px-4 py-2">
+              <div className="flex gap-4 justify-between">
+                <div className="flex gap-4 rounded-xl border border-gray-100 bg-gray-50/50 w-fit px-4 py-2 ml-10">
                   <Label htmlFor="isActive" className="text-sm font-medium leading-none cursor-pointer text-gray-700">Aktív:</Label>
                   <Checkbox
                     id="isActive"
@@ -233,6 +259,25 @@ export default function ProductsPage() {
                     }
                   />
                 </div>
+                <div className="rounded-xl border border-gray-100 bg-gray-50/50 w-fit px-4 py-2 mr-10">
+                  <select name="category" id="category" className="focus:ring-amber-500 focus:border-amber-500 cursor-pointer rounded-xl border-gray-200" onChange={handleInputChange}>
+                    <option value={selectedProduct.category?.name}>{selectedProduct.category?.name}</option>
+                    {categories.map((cat) => (
+                      cat.name !== selectedProduct.category?.name ? (<option key={cat.id} value={cat.name}>{cat.name}</option>) : null
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="isActive" className="text-gray-600 ml-1">Leírás</Label>
+                <Input
+                  id="description"
+                  name="description"
+                  value={selectedProduct.description || ""}
+                  onChange={handleInputChange}
+                  className="rounded-xl border-gray-200 focus:ring-amber-500 focus:border-amber-500"
+                />
               </div>
 
               <div className="bg-gray-50 p-4 rounded-2xl space-y-2">
