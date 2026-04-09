@@ -81,7 +81,7 @@ export default function BartOrders() {
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {orders.map((order) => (
-                  <tr key={order.id} className="hover:bg-amber-50/30 transition-colors">
+                  <tr key={order.id} className={`${order.status === 'READY' ? 'bg-green-100' : order.status === 'PREPARING' ? 'bg-blue-100' : 'bg-red-100'}`}>
                     <td className="px-6 py-4">
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2 font-semibold text-gray-800">
@@ -109,9 +109,9 @@ export default function BartOrders() {
                       <span className="font-bold text-gray-900">{order.totalAmount.toLocaleString()} Ft</span>
                     </td>
 
-                    <td className="px-6 py-4 bg-amber-50">
+                    <td className={`px-6 py-4 ${order.status === 'READY' ? 'bg-green-200' : order.status === 'PREPARING' ? 'bg-blue-200' : 'bg-red-200'}`}>
                       <select
-                        className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border cursor-pointer outline-none
+                        className={`px-3 py-1 rounded-full text-sm font-bold uppercase h-10 border cursor-pointer outline-none
                           ${order.status === 'READY' 
                             ? 'bg-green-50 text-green-600 border-green-300'
                             : order.status === 'PREPARING'
