@@ -29,3 +29,24 @@ export interface Product {
     slug: string;
   };
 }
+
+export interface Order {
+  id: string;
+  handledBy: {
+    fullName: string | null;
+  };
+  totalAmount: number;
+  status: OrderStatus;
+  createdAt: string;
+  updatedAt: string;
+  user: {
+    fullName: string;
+  };
+  items: {
+    quantity: number;
+    unitPriceAtPurchase: number;
+    product: {
+      name: string;
+    };
+  }[];
+}

@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { z } from "zod";
 import { prisma } from "../server";
+import { io } from "../server";
 
 // Schemas
 const orderItemSchema = z.object({
@@ -86,6 +87,7 @@ export const createOrder = async (
     res
       .status(201)
       .json({ message: "Order placed successfully", order: newOrder });
+  io.emit("new-order-received", newOrder);
   } catch (error: any) {
     if (error instanceof z.ZodError) {
       res
@@ -130,6 +132,7 @@ export const getOrders = async (req: Request, res: Response): Promise<void> => {
         include: {
           user: { select: { fullName: true } },
           items: { include: { product: { select: { name: true } } } },
+          handledBy: { select: { fullName: true } },
         },
         orderBy: { createdAt: "asc" },
       });
@@ -198,7 +201,17 @@ export const updateOrderStatus = async (
       });
     });
 
-    res.status(200).json({ message: `Order status updated to ${status}` });
+    const updatedOrder = await prisma.order.findUnique({
+      where: { id },
+      include: {
+        user: { select: { fullName: true } },
+        handledBy: { select: { fullName: true } }, // Behozzuk a pultos nevét is!
+        items: { include: { product: { select: { name: true } } } },
+      }
+    });
+
+    res.status(200).json({ message: `Order status updated to ${status}`, order: updatedOrder });
+    io.emit("order-status-updated", updatedOrder);
   } catch (error) {
     if (error instanceof z.ZodError) {
       res
