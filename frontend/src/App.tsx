@@ -22,6 +22,9 @@ import TrackingPage from "./pages/TrackingPage";
 import Products from "./pages/Products";
 import Users from "./pages/Users";
 import Stats from "./pages/Stats";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
+import Contact from "./pages/Contact";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { refetchOnWindowFocus: false, retry: 1 } },
@@ -73,6 +76,9 @@ export default function App() {
               <Route path="/" element={<Navigate to="/home" />} />
               <Route path="/home" element={<HomePage />} />
               <Route path="/order" element={<OrderPage />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/contact" element={<Contact />} />
 
               {/* Auth */}
               <Route path="/login" element={!isLoggedIn ? <LoginPage /> : <Navigate to="/order" />} />
