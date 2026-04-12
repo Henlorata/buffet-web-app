@@ -33,9 +33,10 @@ model User {
   isActive     Boolean @default(true)
 
   // Relations
-  orders        Order[]    @relation("UserOrders")
-  handledOrders Order[]    @relation("HandledOrders")
-  favorites     Favorite[]
+  orders          Order[]    @relation("UserOrders")
+  handledOrders   Order[]    @relation("HandledOrders")
+  cancelledOrders Order[]    @relation("CancelledOrders")
+  favorites       Favorite[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -97,8 +98,11 @@ model Order {
   user   User   @relation("UserOrders", fields: [userId], references: [id])
 
   // Bartender relation
-  handledById String?
-  handledBy   User?   @relation("HandledOrders", fields: [handledById], references: [id])
+  handledById        String?
+  handledBy          User?   @relation("HandledOrders", fields: [handledById], references: [id])
+  cancellationReason String?
+  cancelledBy        User?   @relation("CancelledOrders", fields: [cancelledById], references: [id])
+  cancelledById      String?
 
   // Order items
   items OrderItem[]

@@ -110,7 +110,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     const accessToken = generateAccessToken(user.id, user.role);
     const refreshToken = generateRefreshToken(user.id);
 
-    await redisClient.setEx(`refresh_token:${user.id}`, 604800, refreshToken);
+    await redisClient.setEx(`refresh_token:${user.id}`, 7 * 24 * 60 * 60, refreshToken);
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
@@ -204,5 +204,110 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
     res.status(200).json({ accessToken: newAccessToken });
   } catch (error) {
     res.status(401).json({ error: 'Invalid refresh token' });
+  }
+};
+
+// GET /api/auth/users
+export const getUsers = async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (req.user?.role !== "ADMIN") { res.status(403).json({ error: "Nincs jogosultságod!" }); return; }
+
+    const users = await prisma.user.findMany({
+      select: { id: true, fullName: true, email: true, role: true, createdAt: true },
+      orderBy: { createdAt: "desc" }
+    });
+
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(500).json({ error: "Szerver hiba" });
+  }
+};
+
+// PATCH /api/auth/users/:id/role
+export const updateUserRole = async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (req.user?.role !== "ADMIN") { res.status(403).json({ error: "Nincs jogosultságod!" }); return; }
+
+    const { id } = req.params;
+    const { role } = req.body;
+
+    if (!["ADMIN", "BARTENDER", "CUSTOMER"].includes(role)) {
+      res.status(400).json({ error: "Érvénytelen szerepkör" }); return;
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: { role },
+      select: { id: true, fullName: true, email: true, role: true }
+    });
+
+    res.status(200).json({ message: "Szerepkör frissítve", user: updatedProduct });
+  } catch (error) {
+    res.status(500).json({ error: "Szerver hiba" });
+  }
+};
+
+const updateProfileSchema = z.object({
+  fullName: z.string().min(2, "A név túl rövid"),
+  email: z.string().email("Érvénytelen e-mail cím"),
+});
+
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, "A jelenlegi jelszó megadása kötelező"),
+  newPassword: z.string().min(6, "Az új jelszónak legalább 6 karakternek kell lennie"),
+});
+
+// PUT /api/auth/profile
+export const updateProfile = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user!.userId;
+    const { fullName, email } = updateProfileSchema.parse(req.body);
+
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser && existingUser.id !== userId) {
+      res.status(409).json({ error: "Ez az e-mail cím már foglalt egy másik fiók által!" });
+      return;
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { fullName, email },
+      select: { id: true, email: true, fullName: true, role: true }
+    });
+
+    res.status(200).json({ message: "Profil sikeresen frissítve", user: updatedUser });
+  } catch (error: any) {
+    if (error instanceof z.ZodError) res.status(400).json({ error: "Validációs hiba", details: error.errors });
+    else res.status(500).json({ error: "Szerver hiba" });
+  }
+};
+
+// PUT /api/auth/password
+export const changePassword = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user!.userId;
+    const { currentPassword, newPassword } = changePasswordSchema.parse(req.body);
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) { res.status(404).json({ error: "Felhasználó nem található" }); return; }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!isMatch) {
+      res.status(401).json({ error: "A jelenlegi jelszó helytelen!" });
+      return;
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const newPasswordHash = await bcrypt.hash(newPassword, salt);
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash: newPasswordHash }
+    });
+
+    res.status(200).json({ message: "Jelszó sikeresen megváltoztatva!" });
+  } catch (error: any) {
+    if (error instanceof z.ZodError) res.status(400).json({ error: "Validációs hiba", details: error.errors });
+    else res.status(500).json({ error: "Szerver hiba" });
   }
 };

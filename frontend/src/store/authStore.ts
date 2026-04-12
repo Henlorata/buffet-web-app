@@ -20,5 +20,5 @@ export const useAuthStore = create<AuthState>()(
     {
       name: "buffet-auth-storage",
     },
-  )
+  ),
 );
