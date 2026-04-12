@@ -1,18 +1,34 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { ShoppingBag, Utensils, User, FileText, X, Package, Users as UsersIcon, ChefHat, TrendingUp } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { ShoppingBag, Utensils, User, FileText, X, Package, Users as UsersIcon, ChefHat, TrendingUp, LogOut } from 'lucide-react';
 import { useCartStore } from '../store/cartStore';
 import { useAuthStore } from '../store/authStore';
 import ShoppingCart from './ShoppingCart';
 import NotificationCenter from './NotificationCenter';
+import {api} from "@/api/axiosInstance.ts";
+import {toast} from "sonner";
 
 export default function Navbar() {
+  const navigate = useNavigate();
   const location = useLocation();
   const cartItems = useCartStore((state) => state.items);
   const user = useAuthStore((state) => state.user);
 
   const [isCartOpen, setIsCartOpen] = useState(false);
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+
+  const handleLogout = async () => {
+    try {
+      const { logout } = useAuthStore.getState();
+      await api.post("/auth/logout");
+      await logout();
+      toast.success('Sikeresen kijelentkeztél!');
+      navigate("/home");
+    } catch (error) {
+      console.error("Logout error", error);
+      toast.error('Kijelentkezési hiba.');
+    }
+  };
 
   useEffect(() => {
     setIsCartOpen(false);
@@ -75,15 +91,24 @@ export default function Navbar() {
           </nav>
 
           <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-
             {user && <NotificationCenter />}
 
             {user ? (
-              <Link to="/profile" className="flex items-center justify-center w-11 h-11 bg-white text-slate-600 hover:text-amber-500 hover:bg-amber-50 rounded-full transition shadow-sm border border-gray-100" title="Profil">
-                <User className="w-5 h-5" />
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link to="/profile" className="flex items-center justify-center w-11 h-11 bg-white text-slate-600 hover:text-amber-500 hover:bg-amber-50 rounded-full transition shadow-sm border border-gray-100" title="Profil">
+                  <User className="w-5 h-5" />
+                </Link>
+
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center justify-center w-11 h-11 bg-white text-red-500 hover:bg-red-50 rounded-full transition shadow-sm border border-gray-100"
+                  title="Kijelentkezés"
+                >
+                  <LogOut className="w-5 h-5" />
+                </button>
+              </div>
             ) : (
-              <Link to="/login" className="hidden sm:inline-flex items-center justify-center bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold px-6 py-2.5 rounded-full transition shadow-md hover:shadow-lg">
+              <Link to="/login" className="hidden sm:inline-flex items-center justify-center bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold px-6 py-2.5 rounded-full transition shadow-md">
                 Bejelentkezés
               </Link>
             )}
