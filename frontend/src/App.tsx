@@ -16,6 +16,7 @@ import BartOrders from "./pages/BartOrders";
 import Users from "./pages/Users";
 import AdminOrders from "./pages/AdminOrders";
 import Products from "./pages/Products";
+import CartPage from "@/pages/CartPage.tsx";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -43,6 +44,7 @@ export default function App() {
               {/* Public */}
               <Route path="/home" element={<HomePage />} />
               <Route path="/order" element={<OrderPage />} />
+              <Route path="/cart" element={<CartPage />} />
 
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
