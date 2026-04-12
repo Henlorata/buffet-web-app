@@ -137,7 +137,7 @@ export default function BartOrders() {
                         {new Date(order.createdAt).toLocaleString("hu-HU", { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
                       </div>
                     </td>
-                    
+
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-1 font-bold">
                         {new Date(order.updatedAt).toLocaleString("hu-HU", { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
