@@ -231,19 +231,37 @@ export const getAdminStats = async (req: Request, res: Response): Promise<void> 
     const sevenDaysAgo = new Date(today);
     sevenDaysAgo.setDate(today.getDate() - 7);
 
+    const statusStats = await prisma.order.groupBy({
+      by: ['status'],
+      _count: { id: true },
+      _sum: { totalAmount: true }
+    });
+
     const recentOrders = await prisma.order.findMany({
       where: {
         createdAt: { gte: sevenDaysAgo },
-        status: { not: "CANCELLED" }
+        status: "COMPLETED"
       },
       select: { totalAmount: true, createdAt: true }
     });
 
-    const allTimeOrders = await prisma.order.aggregate({
-      where: { status: { not: "CANCELLED" } },
-      _sum: { totalAmount: true },
-      _count: { id: true }
+    const topProducts = await prisma.orderItem.groupBy({
+      by: ['productId'],
+      _count: { id: true },
+      _sum: { quantity: true },
+      orderBy: { _sum: { quantity: 'desc' } },
+      take: 5
     });
+
+    const productDetails = await prisma.product.findMany({
+      where: { id: { in: topProducts.map(p => p.productId) } },
+      select: { id: true, name: true }
+    });
+
+    const popularProducts = topProducts.map(tp => ({
+      name: productDetails.find(pd => pd.id === tp.productId)?.name || "Ismeretlen",
+      count: tp._sum.quantity || 0
+    }));
 
     const dailyStats: Record<string, { revenue: number, orders: number }> = {};
     for (let i = 6; i >= 0; i--) {
@@ -260,9 +278,11 @@ export const getAdminStats = async (req: Request, res: Response): Promise<void> 
     });
 
     res.status(200).json({
-      totalRevenue: allTimeOrders._sum.totalAmount || 0,
-      totalOrders: allTimeOrders._count.id,
-      weeklyChart: Object.entries(dailyStats).map(([date, stats]) => ({ date, ...stats }))
+      statusBreakdown: statusStats.map(s => ({ status: s.status, count: s._count.id })),
+      totalRevenue: statusStats.find(s => s.status === 'COMPLETED')?._sum.totalAmount || 0,
+      totalOrders: statusStats.reduce((acc, s) => acc + s._count.id, 0),
+      weeklyChart: Object.entries(dailyStats).map(([date, stats]) => ({ date, ...stats })),
+      popularProducts
     });
   } catch (error) {
     res.status(500).json({ error: "Hiba a statisztika generálásakor" });
