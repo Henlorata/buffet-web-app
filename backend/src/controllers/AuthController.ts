@@ -1,15 +1,16 @@
-import { Request, Response } from 'express';
-import { z } from 'zod';
-import bcrypt from 'bcryptjs';
-import { prisma } from '../server';
-import { generateAccessToken, generateRefreshToken } from '../utils/jwt';
-import { redisClient } from '../lib/redis';
+import { Request, Response } from "express";
+import { z } from "zod";
+import bcrypt from "bcryptjs";
+import { prisma } from "../server";
+import { generateAccessToken, generateRefreshToken } from "../utils/jwt";
+import { redisClient } from "../lib/redis";
+import jwt from "jsonwebtoken";
 
 // Input validation
 const registerSchema = z.object({
-  email: z.email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters long'),
-  fullName: z.string().min(2, 'Full name is required'),
+  email: z.email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters long"),
+  fullName: z.string().min(2, "Full name is required"),
 });
 
 export const register = async (req: Request, res: Response): Promise<void> => {
@@ -21,7 +22,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     });
 
     if (existingUser) {
-      res.status(409).json({ error: 'User with this email already exists' });
+      res.status(409).json({ error: "User with this email already exists" });
       return;
     }
 
@@ -41,11 +42,22 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     const accessToken = generateAccessToken(newUser.id, newUser.role);
     const refreshToken = generateRefreshToken(newUser.id);
 
-    await redisClient.setEx(`refresh_token:${newUser.id}`, 604800, refreshToken); // 7 days expiration
+    await redisClient.setEx(
+      `refresh_token:${newUser.id}`,
+      604800,
+      refreshToken,
+    ); // 7 days expiration
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
 
     // Response
     res.status(201).json({
-      message: 'User registered successfully',
+      message: "User registered successfully",
       user: {
         id: newUser.id,
         email: newUser.email,
@@ -53,21 +65,20 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         role: newUser.role,
       },
       accessToken,
-      refreshToken, // I WILL MOVE THIS TO HTTP-ONLY COOKIE IN PRODUCTION
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      res.status(400).json({ error: 'Validation failed', details: error.errors });
+      res.status(400).json({ error: "Validation failed", details: error });
     } else {
-      console.error('[Register Error]:', error);
-      res.status(500).json({ error: 'Internal server error' });
+      console.error("[Register Error]:", error);
+      res.status(500).json({ error: "Internal server error" });
     }
   }
 };
 
 const loginSchema = z.object({
-  email: z.email('Invalid email address'),
-  password: z.string().min(1, 'Password is required'),
+  email: z.email("Invalid email address"),
+  password: z.string().min(1, "Password is required"),
 });
 
 export const login = async (req: Request, res: Response): Promise<void> => {
@@ -79,14 +90,17 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     });
 
     if (!user) {
-      res.status(401).json({ error: 'Invalid email or password' });
+      res.status(401).json({ error: "Invalid email or password" });
       return;
     }
 
-    const isPasswordValid = await bcrypt.compare(validatedData.password, user.passwordHash);
+    const isPasswordValid = await bcrypt.compare(
+      validatedData.password,
+      user.passwordHash,
+    );
 
     if (!isPasswordValid) {
-      res.status(401).json({ error: 'Invalid email or password' });
+      res.status(401).json({ error: "Invalid email or password" });
       return;
     }
 
@@ -96,9 +110,16 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
     await redisClient.setEx(`refresh_token:${user.id}`, 604800, refreshToken);
 
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+
     // Response
     res.status(200).json({
-      message: 'Login successful',
+      message: "Login successful",
       user: {
         id: user.id,
         email: user.email,
@@ -106,14 +127,13 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         role: user.role,
       },
       accessToken,
-      refreshToken,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      res.status(400).json({ error: 'Validation failed', details: error.errors });
+      res.status(400).json({ error: "Validation failed", details: error });
     } else {
-      console.error('[Login Error]:', error);
-      res.status(500).json({ error: 'Internal server error' });
+      console.error("[Login Error]:", error);
+      res.status(500).json({ error: "Internal server error" });
     }
   }
 };
@@ -124,7 +144,7 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
     const userId = req.user?.userId; // From auth middleware
 
     if (!userId) {
-      res.status(401).json({ error: 'Unauthorized' });
+      res.status(401).json({ error: "Unauthorized" });
       return;
     }
 
@@ -136,18 +156,18 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
         fullName: true,
         role: true,
         createdAt: true,
-      }
+      },
     });
 
     if (!user) {
-      res.status(404).json({ error: 'User not found' });
+      res.status(404).json({ error: "User not found" });
       return;
     }
 
     res.status(200).json(user);
   } catch (error) {
-    console.error('[GetMe Error]:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("[GetMe Error]:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -159,10 +179,28 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
     if (userId) {
       await redisClient.del(`refresh_token:${userId}`); // Invalidate the refresh token = effectively logout
     }
+    res.clearCookie('refreshToken');
 
-    res.status(200).json({ message: 'Logged out successfully' });
+    res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
-    console.error('[Logout Error]:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("[Logout Error]:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const refresh = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) {
+      res.status(401).json({ error: 'No refresh token found' });
+      return;
+    }
+
+    const payload = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET!) as any;
+    const newAccessToken = generateAccessToken(payload.userId, payload.role);
+
+    res.status(200).json({ accessToken: newAccessToken });
+  } catch (error) {
+    res.status(401).json({ error: 'Invalid refresh token' });
   }
 };

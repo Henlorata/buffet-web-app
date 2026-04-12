@@ -1,54 +1,63 @@
 import { Plus } from 'lucide-react';
-import { Product } from '@/types';
-import { useCartStore } from '@/store/cartStore';
+import { Product } from '../types';
+import { useCartStore } from '../store/cartStore';
+import { toast } from 'sonner';
 
-interface ProductCardProps {
-  product: Product;
-}
-
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product }: { product: Product }) {
   const addItem = useCartStore((state) => state.addItem);
 
   const handleAddToCart = () => {
     addItem(product, 1);
+    toast.success(`${product.name} a kosárba került!`, { duration: 2000 });
   };
 
   return (
-    <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-shadow group flex flex-col">
-      <div className="h-48 w-full bg-slate-100 relative overflow-hidden">
-        {product.imageUrl ? (
-          <img src={product.imageUrl} alt={product.name} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-slate-300">
-            <span className="text-sm font-medium">Nincs kép</span>
-          </div>
-        )}
-        {!product.isActive && (
-          <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md">
-            Elfogyott
-          </div>
-        )}
-      </div>
+    <div className="group flex flex-col bg-white rounded-[2rem] overflow-hidden border border-white/40 shadow-sm hover:shadow-2xl hover:shadow-amber-500/10 transition-all duration-500 hover:-translate-y-1">
 
-      <div className="p-5 flex flex-col flex-grow">
-        <div className="flex justify-between items-start mb-2">
-          <h3 className="text-lg font-bold text-gray-900 line-clamp-1">{product.name}</h3>
-          <span className="text-lg font-extrabold text-amber-600 whitespace-nowrap ml-2">
-            {product.price} Ft
-          </span>
+      <div className="relative h-60 w-full bg-slate-50 overflow-hidden p-2">
+        <div className="w-full h-full rounded-3xl overflow-hidden relative">
+          {product.imageUrl ? (
+            <img
+              src={product.imageUrl}
+              alt={product.name}
+              className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700 ease-out"
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-amber-50 to-orange-50 text-amber-300">
+              <span className="text-xl font-black opacity-50">BuffetApp</span>
+            </div>
+          )}
         </div>
 
-        <p className="text-sm text-gray-500 line-clamp-2 flex-grow mb-4">
-          {product.description || 'Friss és finom választás a nap bármely szakában.'}
+        <div className="absolute top-6 left-6 flex gap-2">
+          {!product.isActive && (
+            <span className="bg-red-500/95 backdrop-blur-md text-white text-xs font-black px-4 py-2 rounded-full shadow-lg">
+              ELFOGYOTT
+            </span>
+          )}
+        </div>
+
+        <div className="absolute bottom-6 right-6 bg-white/95 backdrop-blur-md px-5 py-2.5 rounded-2xl shadow-xl border border-white">
+          <span className="text-xl font-black text-slate-900">{product.price} Ft</span>
+        </div>
+      </div>
+
+      <div className="p-6 md:p-8 flex flex-col flex-grow">
+        <h3 className="text-xl font-black text-slate-900 mb-3 line-clamp-1 group-hover:text-amber-500 transition-colors">
+          {product.name}
+        </h3>
+
+        <p className="text-sm text-slate-500 line-clamp-2 flex-grow mb-8 font-medium leading-relaxed">
+          {product.description || 'Friss és ropogós, egyenesen a konyhából a kezedbe.'}
         </p>
 
         <button
           onClick={handleAddToCart}
           disabled={!product.isActive || product.stockQuantity < 1}
-          className="w-full flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 text-white font-semibold py-2.5 rounded-xl transition-colors"
+          className="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-900 text-slate-900 hover:text-white disabled:bg-slate-50 disabled:text-slate-300 font-bold py-4 rounded-2xl transition-all duration-300 active:scale-95"
         >
           <Plus className="w-5 h-5" />
-          {product.isActive && product.stockQuantity > 0 ? 'Kosárba' : 'Jelenleg nem elérhető'}
+          {product.isActive && product.stockQuantity > 0 ? 'Kosárba rakom' : 'Jelenleg nem elérhető'}
         </button>
       </div>
     </div>
