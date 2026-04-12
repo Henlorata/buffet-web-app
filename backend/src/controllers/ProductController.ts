@@ -30,7 +30,6 @@ export const getProducts = async (
 ): Promise<void> => {
   try {
     const products = await prisma.product.findMany({
-      where: { isActive: true },
       include: {
         category: {
           select: { name: true, slug: true },
