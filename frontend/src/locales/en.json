@@ -36,7 +36,8 @@
     "removed_from_favorites": "{{name}} removed from favorites.",
     "added_to_cart": "{{name}} added to cart!",
     "error_favorite": "An error occurred while modifying favorites!",
-    "added_to_cart_multiple": "{{count}} products added to cart!"
+    "added_to_cart_multiple": "{{count}} products added to cart!",
+    "admin_view": "Unavailable for admins"
   },
   "cart": {
     "orderSuccess": "Order placed! The bartender is already preparing it.",

@@ -36,7 +36,8 @@
     "removed_from_favorites": "{{name}} eltávolítva a kedvencekből.",
     "added_to_cart": "{{name}} a kosárba került!",
     "error_favorite": "Hiba történt a kedvencek módosításakor!",
-    "added_to_cart_multiple": "{{count}} db termék a kosárba rakva!"
+    "added_to_cart_multiple": "{{count}} db termék a kosárba rakva!",
+    "admin_view": "Nem elérhető adminoknak"
   },
   "cart": {
     "orderSuccess": "Rendelés leadva! A pultos már készíti is.",
