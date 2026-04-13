@@ -99,7 +99,7 @@ export default function Navbar() {
               className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 hover:bg-amber-100 text-slate-700 rounded-full transition-all text-xs font-black uppercase"
             >
               <Languages className="w-4 h-4" />
-              {i18n.language === 'hu' ? 'EN' : 'HU'}
+              {i18n.language === 'hu' ? 'HU' : 'EN'}
             </button>
 
             {user && <NotificationCenter />}
