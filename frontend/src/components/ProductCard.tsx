@@ -1,13 +1,46 @@
-import { Plus } from 'lucide-react';
-import { Product } from '../types';
+import { Plus, Heart } from 'lucide-react';
 import { useCartStore } from '../store/cartStore';
+import { useAuthStore } from '../store/authStore';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '../api/axiosInstance';
 import { toast } from 'sonner';
 
-export default function ProductCard({ product }: { product: Product }) {
+interface ProductCardProps {
+  product: {
+    id: string;
+    name: string;
+    description: string | null;
+    price: number;
+    stockQuantity: number;
+    imageUrl: string | null;
+    isActive: boolean;
+    favoritedBy?: { userId: string }[];
+  };
+}
+
+export default function ProductCard({ product }: ProductCardProps) {
   const addItem = useCartStore((state) => state.addItem);
+  const user = useAuthStore((state) => state.user);
+  const queryClient = useQueryClient();
+
+  const isFavorite = product.favoritedBy?.some(fav => fav.userId === user?.id);
+
+  const toggleFavMutation = useMutation({
+    mutationFn: async () => api.post(`/products/${product.id}/favorite`),
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+
+      if (response.data.isFavorite) {
+        toast.success(`${product.name} hozzáadva a kedvencekhez! 💖`);
+      } else {
+        toast.info(`${product.name} eltávolítva a kedvencekből.`);
+      }
+    },
+    onError: () => toast.error('Hiba történt a kedvencek módosításakor!')
+  });
 
   const handleAddToCart = () => {
-    addItem(product, 1);
+    addItem(product as any, 1);
     toast.success(`${product.name} a kosárba került!`, { duration: 2000 });
   };
 
@@ -36,6 +69,25 @@ export default function ProductCard({ product }: { product: Product }) {
             </span>
           )}
         </div>
+
+        {user && (
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              toggleFavMutation.mutate();
+            }}
+            disabled={toggleFavMutation.isPending}
+            className={`absolute top-6 right-6 p-3 rounded-full backdrop-blur-md transition-all z-10 hover:scale-110 shadow-lg ${
+              isFavorite
+                ? 'bg-red-500 text-white shadow-red-500/30'
+                : 'bg-white/90 text-slate-400 hover:text-red-500'
+            }`}
+            title={isFavorite ? "Eltávolítás a kedvencekből" : "Hozzáadás a kedvencekhez"}
+          >
+            <Heart className={`w-5 h-5 ${isFavorite ? 'fill-current' : ''}`} />
+          </button>
+        )}
 
         <div className="absolute bottom-6 right-6 bg-white/95 backdrop-blur-md px-5 py-2.5 rounded-2xl shadow-xl border border-white">
           <span className="text-xl font-black text-slate-900">{product.price} Ft</span>

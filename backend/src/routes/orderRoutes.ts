@@ -1,6 +1,6 @@
 import { Router } from "express";
 import {
-  createOrder,
+  createOrder, getAdminStats,
   getOrders,
   updateOrderStatus,
 } from "../controllers/OrderController";
@@ -14,5 +14,6 @@ router.use(requireAuth);
 router.post("/", createOrder);
 router.get("/", getOrders);
 router.patch("/:id/status", updateOrderStatus);
+router.get("/stats", getAdminStats);
 
 export default router;

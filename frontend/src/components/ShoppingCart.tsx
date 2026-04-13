@@ -17,11 +17,11 @@ export default function ShoppingCart({ onClose }: { onClose?: () => void }) {
       const response = await api.post('/orders', orderData);
       return response.data;
     },
-    onSuccess: () => {
-      toast.success('Order placed successfully!.');
+    onSuccess: (data) => {
+      toast.success('Rendelés leadva! A pultos már készíti is.');
       clearCart();
       if (onClose) onClose();
-      navigate('/orders');
+      navigate(`/tracking/${data.order.id}`);
     },
     onError: (error: any) => {
       const zodErrors = error.response?.data?.details;

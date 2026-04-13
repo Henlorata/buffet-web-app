@@ -17,6 +17,8 @@ const createOrderSchema = z.object({
 
 const updateStatusSchema = z.object({
   status: z.enum(["PREPARING", "READY", "COMPLETED", "CANCELLED"]),
+  reason: z.string().optional(),
+  adminCode: z.string().optional(),
 });
 
 // POST /api/orders
@@ -110,32 +112,36 @@ export const createOrder = async (
 export const getOrders = async (req: Request, res: Response): Promise<void> => {
   try {
     const { userId, role } = req.user!;
+    const { view } = req.query;
 
     let orders;
 
-    if (role === "CUSTOMER") {
-      // Customers only see their own orders
+    if (view === "kitchen") {
+      if (role === "CUSTOMER") {
+        res.status(403).json({ error: "Nincs jogosultságod a konyhai nézethez" });
+        return;
+      }
+      orders = await prisma.order.findMany({
+        where: role === "CUSTOMER" ? { userId } : { status: { in: ["NEW", "PREPARING", "READY"] } },
+        include: {
+          user: { select: { fullName: true } },
+          cancelledBy: { select: { fullName: true } },
+          items: { include: { product: { select: { name: true, imageUrl: true } } } },
+          handledBy: { select: { fullName: true } },
+        },
+        orderBy: role === "CUSTOMER" ? { createdAt: "desc" } : { createdAt: "asc" },
+      });
+    }
+    else {
       orders = await prisma.order.findMany({
         where: { userId },
         include: {
+          cancelledBy: { select: { fullName: true } },
           items: {
             include: { product: { select: { name: true, imageUrl: true } } },
           },
         },
         orderBy: { createdAt: "desc" },
-      });
-    } else {
-      // Bartenders and Admins see all active orders (not completed/canceled)
-      orders = await prisma.order.findMany({
-        where: {
-          status: { in: ["NEW", "PREPARING", "READY"] },
-        },
-        include: {
-          user: { select: { fullName: true } },
-          items: { include: { product: { select: { name: true } } } },
-          handledBy: { select: { fullName: true } },
-        },
-        orderBy: { createdAt: "asc" },
       });
     }
 
@@ -147,14 +153,11 @@ export const getOrders = async (req: Request, res: Response): Promise<void> => {
 };
 
 // PATCH /api/orders/:id/status
-export const updateOrderStatus = async (
-  req: Request,
-  res: Response,
-): Promise<void> => {
+export const updateOrderStatus = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
     const { userId, role } = req.user!;
-    const { status } = updateStatusSchema.parse(req.body);
+    const { status, reason, adminCode } = updateStatusSchema.parse(req.body);
 
     const order = await prisma.order.findUnique({
       where: { id },
@@ -162,28 +165,32 @@ export const updateOrderStatus = async (
     });
 
     if (!order) {
-      res.status(404).json({ error: "Order not found" });
+      res.status(404).json({ error: "Rendelés nem található" });
       return;
     }
 
-    // Authorization checks
-    if (role === "CUSTOMER") {
-      // Customers can ONLY cancel, and ONLY if the order is still 'NEW'
-      if (status !== "CANCELLED" || order.status !== "NEW") {
-        res.status(403).json({
-          error: "Customers can only cancel orders that are in NEW status",
-        });
-        return;
+    if (status === "CANCELLED") {
+      if (role === "CUSTOMER") {
+        if (order.status !== "NEW") {
+          res.status(403).json({ error: "Már készülő rendelést nem mondhatsz le. Érdeklődj a pultnál!" });
+          return;
+        }
       }
-      if (order.userId !== userId) {
-        res.status(403).json({ error: "Cannot modify someone else's order" });
-        return;
+      else if (role === "BARTENDER") {
+        if (order.status !== "NEW") {
+          if (adminCode !== "12345" && role !== "ADMIN") {
+            res.status(403).json({ error: "Elfogadott rendelés törléséhez műszakvezetői kód szükséges!" });
+            return;
+          }
+          if (!reason || reason.length < 5) {
+            res.status(400).json({ error: "Elfogadott rendelésnél az indoklás kötelező!" });
+            return;
+          }
+        }
       }
     }
 
-    // Process the update
     await prisma.$transaction(async (tx) => {
-      // If cancelling, we MUST restock the items
       if (status === "CANCELLED" && order.status !== "CANCELLED") {
         for (const item of order.items) {
           await tx.product.update({
@@ -197,30 +204,87 @@ export const updateOrderStatus = async (
         where: { id },
         data: {
           status,
-          handledById: role !== "CUSTOMER" ? userId : undefined, // Record which bartender handled it
+          cancellationReason: reason,
+          cancelledById: status === "CANCELLED" ? userId : undefined,
+          handledById: role !== "CUSTOMER" ? userId : undefined,
         },
       });
     });
 
-    const updatedOrder = await prisma.order.findUnique({
-      where: { id },
-      include: {
-        user: { select: { fullName: true } },
-        handledBy: { select: { fullName: true } }, // Bartender's name
-        items: { include: { product: { select: { name: true } } } },
+    res.status(200).json({ message: "Státusz sikeresen frissítve" });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: "Validációs hiba", details: error.errors });
+    } else {
+      console.error("[Update Order Error]:", error);
+      res.status(500).json({ error: "Belső szerver hiba" });
+    }
+  }
+};
+
+// GET /api/orders/stats
+export const getAdminStats = async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (req.user?.role !== "ADMIN") { res.status(403).json({ error: "Nincs jogosultságod" }); return; }
+
+    const today = new Date();
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(today.getDate() - 7);
+
+    const statusStats = await prisma.order.groupBy({
+      by: ['status'],
+      _count: { id: true },
+      _sum: { totalAmount: true }
+    });
+
+    const recentOrders = await prisma.order.findMany({
+      where: {
+        createdAt: { gte: sevenDaysAgo },
+        status: "COMPLETED"
+      },
+      select: { totalAmount: true, createdAt: true }
+    });
+
+    const topProducts = await prisma.orderItem.groupBy({
+      by: ['productId'],
+      _count: { id: true },
+      _sum: { quantity: true },
+      orderBy: { _sum: { quantity: 'desc' } },
+      take: 5
+    });
+
+    const productDetails = await prisma.product.findMany({
+      where: { id: { in: topProducts.map(p => p.productId) } },
+      select: { id: true, name: true }
+    });
+
+    const popularProducts = topProducts.map(tp => ({
+      name: productDetails.find(pd => pd.id === tp.productId)?.name || "Ismeretlen",
+      count: tp._sum.quantity || 0
+    }));
+
+    const dailyStats: Record<string, { revenue: number, orders: number }> = {};
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(today); d.setDate(d.getDate() - i);
+      dailyStats[d.toISOString().split('T')[0]] = { revenue: 0, orders: 0 };
+    }
+
+    recentOrders.forEach(order => {
+      const dateKey = order.createdAt.toISOString().split('T')[0];
+      if (dailyStats[dateKey]) {
+        dailyStats[dateKey].revenue += order.totalAmount;
+        dailyStats[dateKey].orders += 1;
       }
     });
 
-    res.status(200).json({ message: `Order status updated to ${status}`, order: updatedOrder });
-    io.emit("order-status-updated", updatedOrder);
+    res.status(200).json({
+      statusBreakdown: statusStats.map(s => ({ status: s.status, count: s._count.id })),
+      totalRevenue: statusStats.find(s => s.status === 'COMPLETED')?._sum.totalAmount || 0,
+      totalOrders: statusStats.reduce((acc, s) => acc + s._count.id, 0),
+      weeklyChart: Object.entries(dailyStats).map(([date, stats]) => ({ date, ...stats })),
+      popularProducts
+    });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      res
-        .status(400)
-        .json({ error: "Validation failed", details: error.errors });
-    } else {
-      console.error("[Update Order Error]:", error);
-      res.status(500).json({ error: "Internal server error" });
-    }
+    res.status(500).json({ error: "Hiba a statisztika generálásakor" });
   }
 };

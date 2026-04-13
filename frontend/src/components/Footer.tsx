@@ -1,32 +1,31 @@
-import { Utensils } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Utensils } from 'lucide-react';
 
 export default function Footer() {
+  const currentYear = new Date().getFullYear();
+
   return (
-    <footer className="bg-white border-t border-gray-100 mt-auto">
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+    <footer className="bg-white border-t border-slate-100 mt-auto">
+      <div className="container mx-auto px-4 py-10">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-6">
 
           {/* Logo */}
-          <div className="flex items-center gap-2 text-amber-600">
-            <Utensils className="w-6 h-6" />
-            <span className="text-lg font-bold tracking-tight">
-              Buffet<span className="text-gray-800">App</span>
-            </span>
+          <div className="flex items-center gap-2 text-amber-500 opacity-80 hover:opacity-100 transition-opacity">
+            <Utensils className="w-5 h-5" />
+            <span className="text-lg font-black tracking-tight text-slate-900">Buffet<span className="text-amber-500">App</span></span>
+          </div>
+
+          {/* Navigáció */}
+          <div className="flex flex-wrap justify-center gap-x-8 gap-y-4">
+            <Link to="/terms" className="text-sm font-bold text-slate-500 hover:text-amber-500 transition-colors">ÁSZF</Link>
+            <Link to="/privacy" className="text-sm font-bold text-slate-500 hover:text-amber-500 transition-colors">Adatvédelem</Link>
+            <Link to="/contact" className="text-sm font-bold text-slate-500 hover:text-amber-500 transition-colors">Kapcsolat</Link>
           </div>
 
           {/* Copyright */}
-          <p className="text-sm text-gray-500">
-            © {new Date().getFullYear()} Buffet App. Minden jog fenntartva.
-          </p>
-
-          {/* Links */}
-          <div className="flex gap-6 text-sm font-medium text-gray-500">
-            <Link to="/" className="hover:text-amber-600 transition-colors">ÁSZF</Link>
-            <Link to="/" className="hover:text-amber-600 transition-colors">Adatvédelem</Link>
-            <Link to="/" className="hover:text-amber-600 transition-colors">Kapcsolat</Link>
+          <div className="text-sm font-medium text-slate-400">
+            &copy; {currentYear} BuffetApp. Minden jog fenntartva.
           </div>
-
         </div>
       </div>
     </footer>
