@@ -6,18 +6,23 @@ import { UserPlus, ArrowLeft, Mail, Lock, User, Loader2 } from "lucide-react";
 import { api } from "@/api/axiosInstance";
 import { useAuthStore } from "@/store/authStore";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
+import { useMemo } from "react";
 
-const registerSchema = z.object({
-  fullName: z.string().min(2, "A név megadása kötelező!"),
-  email: z.email("Érvénytelen e-mail cím!"),
-  password: z.string().min(6, "A jelszónak legalább 6 karakternek kell lennie!"),
+const getRegisterSchema = (t: any) => z.object({
+  fullName: z.string().min(2, t("register.nameError")),
+  email: z.string().email(t("register.emailError")),
+  password: z.string().min(6, t("register.passwordError")),
 });
 
-type RegisterForm = z.infer<typeof registerSchema>;
+type RegisterForm = z.infer<ReturnType<typeof getRegisterSchema>>;
 
 export default function RegisterPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const setAuth = useAuthStore((state) => state.setAuth);
+
+  const registerSchema = useMemo(() => getRegisterSchema(t), [t]);
 
   const {
     register,
@@ -30,105 +35,93 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterForm) => {
     try {
       const response = await api.post("/auth/register", data);
-      const { user, accessToken} = response.data;
-
+      const { user, accessToken } = response.data;
       setAuth(user, accessToken);
-      toast.success("Sikeres regisztráció! Üdvözlünk a rendszerben!");
-      navigate("/order");
+
+      toast.success(t("register.successToast"));
+      navigate("/");
     } catch (error: any) {
       if (error.response?.status === 409) {
-        toast.error("Ezzel az e-mail címmel már regisztráltak!");
+        toast.error(t("register.emailTaken"));
       } else {
-        toast.error(error.response?.data?.error || "Váratlan hiba történt a regisztráció során.");
+        toast.error(t("register.error", { error: error.response?.data?.error || "Unknown error" }));
       }
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[70vh] animate-in fade-in duration-500 p-4">
-      <div className="w-full max-w-md bg-white p-8 rounded-3xl shadow-xl border border-gray-100 space-y-8">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <div className="max-w-md w-full bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 p-8 md:p-10 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
         <button
           onClick={() => navigate("/login")}
-          className="flex items-center text-gray-400 hover:text-amber-500 transition-colors text-sm font-medium hover:cursor-pointer w-fit"
+          className="inline-flex items-center text-sm font-bold text-slate-500 hover:text-slate-900 transition-colors mb-8 relative z-10"
         >
-          <ArrowLeft className="w-4 h-4 mr-1" /> Vissza a belépéshez
+          <ArrowLeft className="w-4 h-4 mr-1" />
+          {t("register.backToLogin")}
         </button>
 
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-extrabold text-gray-900">
-            Fiók <span className="text-amber-500">létrehozása</span>
-          </h1>
-          <p className="text-gray-500">
-            Csatlakozz hozzánk és rendelj egyszerűen!
-          </p>
+        <div className="mb-10 relative z-10">
+          <h1 className="text-3xl font-black text-slate-900 mb-3">{t("register.title")}</h1>
+          <p className="text-slate-500 font-medium">{t("register.subtitle")}</p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 relative z-10">
           <div>
+            <label className="block text-sm font-bold text-slate-700 mb-1.5 ml-1">{t("register.nameLabel")}</label>
             <div className="relative">
-              <User className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <input
                 {...register("fullName")}
-                disabled={isSubmitting}
                 type="text"
-                className={`w-full pl-10 pr-4 py-3 bg-gray-50 border ${errors.fullName ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:ring-amber-500'} rounded-xl focus:ring-2 focus:border-transparent outline-none transition-all disabled:opacity-50`}
-                placeholder="Teljes név"
+                placeholder={t("register.namePlaceholder")}
+                className={`w-full bg-slate-50 border ${errors.fullName ? 'border-red-400 focus:ring-red-400/20' : 'border-slate-200 focus:ring-amber-500/20'} rounded-2xl pl-11 pr-5 py-4 outline-none focus:ring-4 focus:border-amber-500 font-medium transition-all`}
               />
             </div>
-            {errors.fullName && <p className="text-red-500 text-xs mt-1 ml-1 font-medium">{errors.fullName.message}</p>}
+            {errors.fullName && <p className="text-red-500 text-xs mt-1.5 ml-2 font-bold">{errors.fullName.message}</p>}
           </div>
 
           <div>
+            <label className="block text-sm font-bold text-slate-700 mb-1.5 ml-1">{t("register.emailLabel")}</label>
             <div className="relative">
-              <Mail className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <input
                 {...register("email")}
-                disabled={isSubmitting}
                 type="email"
-                className={`w-full pl-10 pr-4 py-3 bg-gray-50 border ${errors.email ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:ring-amber-500'} rounded-xl focus:ring-2 focus:border-transparent outline-none transition-all disabled:opacity-50`}
-                placeholder="E-mail cím"
+                placeholder={t("register.emailPlaceholder")}
+                className={`w-full bg-slate-50 border ${errors.email ? 'border-red-400 focus:ring-red-400/20' : 'border-slate-200 focus:ring-amber-500/20'} rounded-2xl pl-11 pr-5 py-4 outline-none focus:ring-4 focus:border-amber-500 font-medium transition-all`}
               />
             </div>
-            {errors.email && <p className="text-red-500 text-xs mt-1 ml-1 font-medium">{errors.email.message}</p>}
+            {errors.email && <p className="text-red-500 text-xs mt-1.5 ml-2 font-bold">{errors.email.message}</p>}
           </div>
 
           <div>
+            <label className="block text-sm font-bold text-slate-700 mb-1.5 ml-1">{t("register.passwordLabel")}</label>
             <div className="relative">
-              <Lock className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <input
                 {...register("password")}
-                disabled={isSubmitting}
                 type="password"
-                className={`w-full pl-10 pr-4 py-3 bg-gray-50 border ${errors.password ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:ring-amber-500'} rounded-xl focus:ring-2 focus:border-transparent outline-none transition-all disabled:opacity-50`}
-                placeholder="Jelszó"
+                placeholder={t("register.passwordPlaceholder")}
+                className={`w-full bg-slate-50 border ${errors.password ? 'border-red-400 focus:ring-red-400/20' : 'border-slate-200 focus:ring-amber-500/20'} rounded-2xl pl-11 pr-5 py-4 outline-none focus:ring-4 focus:border-amber-500 font-medium transition-all`}
               />
             </div>
-            {errors.password && <p className="text-red-500 text-xs mt-1 ml-1 font-medium">{errors.password.message}</p>}
+            {errors.password && <p className="text-red-500 text-xs mt-1.5 ml-2 font-bold">{errors.password.message}</p>}
           </div>
 
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex items-center justify-center gap-2 w-full bg-amber-500 hover:bg-amber-600 disabled:bg-amber-300 text-white font-bold py-3 rounded-xl shadow-md hover:shadow-lg transition-all mt-4 hover:cursor-pointer disabled:cursor-not-allowed"
+            className="flex items-center justify-center gap-2 w-full bg-amber-500 hover:bg-amber-600 disabled:bg-slate-300 text-white font-bold py-4 rounded-2xl shadow-lg hover:shadow-amber-500/30 transition-all active:scale-95 mt-8 group"
           >
             {isSubmitting ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                <span>Mentés folyamatban...</span>
-              </>
+              <><Loader2 className="w-5 h-5 animate-spin" /> {t("register.registeringBtn")}</>
             ) : (
-              <>
-                <UserPlus className="w-5 h-5" /> Regisztráció
-              </>
+              <><UserPlus className="w-5 h-5 group-hover:scale-110 transition-transform" /> {t("register.registerBtn")}</>
             )}
           </button>
         </form>
-
-        <p className="text-center text-xs text-gray-400 px-4">
-          A regisztrációval elfogadod a felhasználási feltételeket és az
-          adatkezelési szabályzatot.
-        </p>
       </div>
     </div>
   );

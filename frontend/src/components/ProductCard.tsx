@@ -4,6 +4,7 @@ import { useAuthStore } from '../store/authStore';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api/axiosInstance';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface ProductCardProps {
   product: {
@@ -19,6 +20,7 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
+  const { t } = useTranslation();
   const addItem = useCartStore((state) => state.addItem);
   const user = useAuthStore((state) => state.user);
   const queryClient = useQueryClient();
@@ -31,17 +33,17 @@ export default function ProductCard({ product }: ProductCardProps) {
       queryClient.invalidateQueries({ queryKey: ['products'] });
 
       if (response.data.isFavorite) {
-        toast.success(`${product.name} hozzáadva a kedvencekhez! 💖`);
+        toast.success(t('product.added_to_favorites', { name: product.name }));
       } else {
-        toast.info(`${product.name} eltávolítva a kedvencekből.`);
+        toast.info(t('product.removed_from_favorites', { name: product.name }));
       }
     },
-    onError: () => toast.error('Hiba történt a kedvencek módosításakor!')
+    onError: () => toast.error(t('product.error_favorite'))
   });
 
   const handleAddToCart = () => {
     addItem(product as any, 1);
-    toast.success(`${product.name} a kosárba került!`, { duration: 2000 });
+    toast.success(t('product.added_to_cart', { name: product.name }), { duration: 2000 });
   };
 
   return (
@@ -65,7 +67,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         <div className="absolute top-6 left-6 flex gap-2">
           {!product.isActive && (
             <span className="bg-red-500/95 backdrop-blur-md text-white text-xs font-black px-4 py-2 rounded-full shadow-lg">
-              ELFOGYOTT
+              {t('product.out_of_stock')}
             </span>
           )}
         </div>
@@ -83,14 +85,14 @@ export default function ProductCard({ product }: ProductCardProps) {
                 ? 'bg-red-500 text-white shadow-red-500/30'
                 : 'bg-white/90 text-slate-400 hover:text-red-500'
             }`}
-            title={isFavorite ? "Eltávolítás a kedvencekből" : "Hozzáadás a kedvencekhez"}
+            title={isFavorite ? t('product.remove_favorite') : t('product.add_favorite')}
           >
             <Heart className={`w-5 h-5 ${isFavorite ? 'fill-current' : ''}`} />
           </button>
         )}
 
         <div className="absolute bottom-6 right-6 bg-white/95 backdrop-blur-md px-5 py-2.5 rounded-2xl shadow-xl border border-white">
-          <span className="text-xl font-black text-slate-900">{product.price} Ft</span>
+          <span className="text-xl font-black text-slate-900">{product.price} {t('product.currency')}</span>
         </div>
       </div>
 
@@ -100,7 +102,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         </h3>
 
         <p className="text-sm text-slate-500 line-clamp-2 flex-grow mb-8 font-medium leading-relaxed">
-          {product.description || 'Friss és ropogós, egyenesen a konyhából a kezedbe.'}
+          {product.description || t('product.default_description')}
         </p>
 
         <button
@@ -109,7 +111,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           className="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-900 text-slate-900 hover:text-white disabled:bg-slate-50 disabled:text-slate-300 font-bold py-4 rounded-2xl transition-all duration-300 active:scale-95"
         >
           <Plus className="w-5 h-5" />
-          {product.isActive && product.stockQuantity > 0 ? 'Kosárba rakom' : 'Jelenleg nem elérhető'}
+          {product.isActive && product.stockQuantity > 0 ? t('product.add_to_cart') : t('product.unavailable')}
         </button>
       </div>
     </div>

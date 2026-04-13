@@ -4,6 +4,7 @@ import { api } from '@/api/axiosInstance';
 import { useAuthStore } from '@/store/authStore';
 import ProductCard from '@/components/ProductCard';
 import { Loader2, Search, Heart, UtensilsCrossed } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Product {
   id: string; name: string; description: string; price: number; stockQuantity: number; imageUrl: string | null; isActive: boolean;
@@ -12,6 +13,7 @@ interface Product {
 }
 
 export default function OrderPage() {
+  const { t } = useTranslation();
   const user = useAuthStore(state => state.user);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
@@ -39,9 +41,9 @@ export default function OrderPage() {
       <div className="bg-slate-900 rounded-[2.5rem] p-8 md:p-12 mb-10 flex flex-col md:flex-row items-center justify-between gap-8 shadow-xl">
         <div className="text-white w-full md:w-1/2">
           <h1 className="text-4xl md:text-5xl font-black mb-4 flex items-center gap-4">
-            <UtensilsCrossed className="w-10 h-10 text-amber-500" /> Étlapunk
+            <UtensilsCrossed className="w-10 h-10 text-amber-500" /> {t('menu.title')}
           </h1>
-          <p className="text-slate-400 font-medium text-lg">Keresd meg kedvenc szendvicsedet vagy fedezz fel valami újat!</p>
+          <p className="text-slate-400 font-medium text-lg">{t('menu.subtitle')}</p>
         </div>
 
         <div className="w-full md:w-1/2 space-y-4">
@@ -49,7 +51,7 @@ export default function OrderPage() {
             <Search className="absolute left-4 top-4 w-6 h-6 text-slate-400" />
             <input
               type="text"
-              placeholder="Mit ennél ma? Keresés..."
+              placeholder={t('menu.searchPlaceholder')}
               value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full bg-white/10 border border-white/20 text-white placeholder:text-slate-400 rounded-2xl pl-12 pr-4 py-4 outline-none focus:ring-2 focus:ring-amber-500 transition-all font-medium text-lg"
             />
@@ -60,7 +62,7 @@ export default function OrderPage() {
               onClick={() => setActiveCategory('all')}
               className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${activeCategory === 'all' ? 'bg-amber-500 text-white' : 'bg-white/10 text-slate-300 hover:bg-white/20'}`}
             >
-              Összes
+              {t('menu.allCategories')}
             </button>
             {categories.map(cat => (
               <button
@@ -76,7 +78,7 @@ export default function OrderPage() {
                 onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
                 className={`ml-auto flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${showFavoritesOnly ? 'bg-red-500 text-white shadow-lg shadow-red-500/20' : 'bg-white/10 text-slate-300 hover:bg-white/20'}`}
               >
-                <Heart className={`w-4 h-4 ${showFavoritesOnly ? 'fill-current' : ''}`} /> Kedvenceim
+                <Heart className={`w-4 h-4 ${showFavoritesOnly ? 'fill-current' : ''}`} /> {t('menu.favorites')}
               </button>
             )}
           </div>
@@ -86,8 +88,8 @@ export default function OrderPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {filteredProducts?.length === 0 ? (
           <div className="col-span-full py-20 text-center">
-            <h3 className="text-2xl font-black text-slate-800 mb-2">Nincs találat!</h3>
-            <p className="text-slate-500">Próbálj más kifejezésre keresni, vagy töröld a szűrőket.</p>
+            <h3 className="text-2xl font-black text-slate-800 mb-2">{t('menu.noResults')}</h3>
+            <p className="text-slate-500">{t('menu.noResultsDesc')}</p>
           </div>
         ) : (
           filteredProducts?.map(product => (

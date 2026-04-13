@@ -6,17 +6,22 @@ import { LogIn, UserPlus, Mail, Lock, Loader2, Utensils } from "lucide-react";
 import { api } from "@/api/axiosInstance";
 import { useAuthStore } from "@/store/authStore";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
+import { useMemo } from "react";
 
-const loginSchema = z.object({
-  email: z.string().email("Kérlek, adj meg egy érvényes e-mail címet!"),
-  password: z.string().min(1, "A jelszó megadása kötelező!"),
+const getLoginSchema = (t: any) => z.object({
+  email: z.string().email(t("login.emailError")),
+  password: z.string().min(1, t("login.passwordError")),
 });
 
-type LoginForm = z.infer<typeof loginSchema>;
+type LoginForm = z.infer<ReturnType<typeof getLoginSchema>>;
 
 export default function LoginPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const setAuth = useAuthStore((state) => state.setAuth);
+
+  const loginSchema = useMemo(() => getLoginSchema(t), [t]);
 
   const {
     register,
@@ -29,86 +34,81 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginForm) => {
     try {
       const response = await api.post("/auth/login", data);
-
       const { user, accessToken } = response.data;
       setAuth(user, accessToken);
 
-      toast.success(`Üdvözlünk újra, ${user.fullName.split(' ')[0]}! 👋`);
-
-      if (user.role === "ADMIN") navigate("/admin-orders");
-      else if (user.role === "BARTENDER") navigate("/bart-orders");
-      else navigate("/order");
-
+      toast.success(t("login.welcomeBack", { name: user.fullName }));
+      navigate("/");
     } catch (error: any) {
-      toast.error(error.response?.data?.error || "Helytelen e-mail cím vagy jelszó!");
+      if (error.response?.status === 401) {
+        toast.error(t("login.invalidCredentials"));
+      } else {
+        toast.error(t("login.error", { error: error.response?.data?.error || "Unknown error" }));
+      }
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[75vh] animate-in fade-in zoom-in-95 duration-500 p-4">
-      <div className="w-full max-w-md bg-white/80 backdrop-blur-xl p-10 rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-white/50 space-y-8 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <div className="max-w-md w-full bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 p-8 md:p-10 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
-        {/* Dekorációs háttér elem */}
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
-        <div className="text-center space-y-3 relative z-10">
-          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg shadow-amber-500/30 mb-6 text-white transform -rotate-6 hover:rotate-0 transition-transform duration-300">
-            <Utensils className="w-8 h-8" />
+        <div className="text-center mb-10 relative">
+          <div className="w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-slate-900/20">
+            <Utensils className="w-8 h-8 text-amber-500" />
           </div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">
-            Üdvözlünk <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-600">újra!</span>
-          </h1>
-          <p className="text-slate-500 font-medium">Jelentkezz be a finomságokért</p>
+          <h1 className="text-3xl font-black text-slate-900 mb-3">{t("login.title")}</h1>
+          <p className="text-slate-500 font-medium px-4">{t("login.subtitle")}</p>
         </div>
 
-        <form className="space-y-5 relative z-10" onSubmit={handleSubmit(onSubmit)}>
-          <div className="space-y-1">
-            <div className="relative group">
-              <Mail className="absolute left-4 top-3.5 w-5 h-5 text-slate-400 group-focus-within:text-amber-500 transition-colors" />
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 relative">
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-1.5 ml-1">{t("login.emailLabel")}</label>
+            <div className="relative">
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <input
                 {...register("email")}
-                disabled={isSubmitting}
                 type="email"
-                className={`w-full pl-12 pr-4 py-3.5 bg-slate-50/50 border ${errors.email ? 'border-red-500 focus:ring-red-500/20' : 'border-slate-200 focus:border-amber-500 focus:ring-amber-500/20'} rounded-2xl focus:ring-4 outline-none transition-all disabled:opacity-50 font-medium text-slate-900 placeholder:text-slate-400`}
-                placeholder="E-mail címed"
+                placeholder={t("login.emailPlaceholder")}
+                className={`w-full bg-slate-50 border ${errors.email ? 'border-red-400 focus:ring-red-400/20' : 'border-slate-200 focus:ring-amber-500/20'} rounded-2xl pl-11 pr-5 py-4 outline-none focus:ring-4 focus:border-amber-500 font-medium transition-all`}
               />
             </div>
-            {errors.email && <p className="text-red-500 text-sm mt-1 ml-2 font-bold animate-in slide-in-from-top-1">{errors.email.message}</p>}
+            {errors.email && <p className="text-red-500 text-xs mt-1.5 ml-2 font-bold">{errors.email.message}</p>}
           </div>
 
-          <div className="space-y-1">
-            <div className="relative group">
-              <Lock className="absolute left-4 top-3.5 w-5 h-5 text-slate-400 group-focus-within:text-amber-500 transition-colors" />
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-1.5 ml-1">{t("login.passwordLabel")}</label>
+            <div className="relative">
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <input
                 {...register("password")}
-                disabled={isSubmitting}
                 type="password"
-                className={`w-full pl-12 pr-4 py-3.5 bg-slate-50/50 border ${errors.password ? 'border-red-500 focus:ring-red-500/20' : 'border-slate-200 focus:border-amber-500 focus:ring-amber-500/20'} rounded-2xl focus:ring-4 outline-none transition-all disabled:opacity-50 font-medium text-slate-900 placeholder:text-slate-400`}
-                placeholder="Jelszavad"
+                placeholder={t("login.passwordPlaceholder")}
+                className={`w-full bg-slate-50 border ${errors.password ? 'border-red-400 focus:ring-red-400/20' : 'border-slate-200 focus:ring-amber-500/20'} rounded-2xl pl-11 pr-5 py-4 outline-none focus:ring-4 focus:border-amber-500 font-medium transition-all`}
               />
             </div>
-            {errors.password && <p className="text-red-500 text-sm mt-1 ml-2 font-bold animate-in slide-in-from-top-1">{errors.password.message}</p>}
+            {errors.password && <p className="text-red-500 text-xs mt-1.5 ml-2 font-bold">{errors.password.message}</p>}
           </div>
 
           <button
             type="submit"
             disabled={isSubmitting}
-            className="group flex items-center justify-center gap-2 w-full bg-gradient-to-r from-slate-900 to-slate-800 hover:from-amber-500 hover:to-orange-500 disabled:from-slate-300 disabled:to-slate-300 text-white font-bold py-4 rounded-2xl shadow-xl hover:shadow-amber-500/25 transition-all duration-300 active:scale-[0.98] mt-4"
+            className="flex items-center justify-center gap-2 w-full bg-slate-900 hover:bg-amber-500 disabled:bg-slate-300 text-white font-bold py-4 rounded-2xl shadow-lg hover:shadow-amber-500/30 transition-all active:scale-95 mt-8 group"
           >
             {isSubmitting ? (
-              <><Loader2 className="w-5 h-5 animate-spin" /> Bejelentkezés...</>
+              <><Loader2 className="w-5 h-5 animate-spin" /> {t("login.loggingInBtn")}</>
             ) : (
-              <><LogIn className="w-5 h-5 group-hover:translate-x-1 transition-transform" /> Bejelentkezés</>
+              <><LogIn className="w-5 h-5 group-hover:translate-x-1 transition-transform" /> {t("login.loginBtn")}</>
             )}
           </button>
         </form>
 
-        <div className="relative py-2 z-10">
+        <div className="relative py-8 z-10">
           <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-slate-200"></span>
+            <span className="w-full border-t border-slate-100"></span>
           </div>
-          <div className="relative flex justify-center text-xs uppercase font-black">
-            <span className="bg-white px-4 text-slate-400">Vagy</span>
+          <div className="relative flex justify-center text-xs uppercase font-black tracking-wider">
+            <span className="bg-white px-4 text-slate-400">{t("login.or")}</span>
           </div>
         </div>
 
@@ -116,9 +116,10 @@ export default function LoginPage() {
           type="button"
           onClick={() => navigate("/register")}
           disabled={isSubmitting}
-          className="flex items-center justify-center gap-2 w-full bg-transparent border-2 border-slate-200 text-slate-600 font-bold py-4 rounded-2xl hover:border-amber-500 hover:text-amber-600 transition-all duration-300 relative z-10"
+          className="flex items-center justify-center gap-2 w-full bg-white border-2 border-slate-100 hover:bg-slate-50 hover:border-slate-200 text-slate-700 font-bold py-4 rounded-2xl transition-all active:scale-95"
         >
-          <UserPlus className="w-5 h-5" /> Fiók létrehozása
+          <UserPlus className="w-5 h-5" />
+          {t("login.registerLink")}
         </button>
       </div>
     </div>

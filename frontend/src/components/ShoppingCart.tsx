@@ -5,8 +5,10 @@ import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { api } from '../api/axiosInstance';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 export default function ShoppingCart({ onClose }: { onClose?: () => void }) {
+  const { t } = useTranslation();
   const { items, removeItem, addItem, getTotalPrice, clearCart } = useCartStore();
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
@@ -18,7 +20,7 @@ export default function ShoppingCart({ onClose }: { onClose?: () => void }) {
       return response.data;
     },
     onSuccess: (data) => {
-      toast.success('Rendelés leadva! A pultos már készíti is.');
+      toast.success(t('cart.orderSuccess'));
       clearCart();
       if (onClose) onClose();
       navigate(`/tracking/${data.order.id}`);
@@ -29,23 +31,23 @@ export default function ShoppingCart({ onClose }: { onClose?: () => void }) {
       if (zodErrors && Array.isArray(zodErrors)) {
         console.error("Zod validation error:", zodErrors);
 
-        toast.error(`Invalid data: ${zodErrors[0].message}`);
+        toast.error(t('cart.invalidData', { error: zodErrors[0].message }));
         return;
       }
 
       const errorMsg = error.response?.data?.error || 'Unknown error';
 
       if (error.response?.status === 409) {
-        toast.error('⚠There is not enough stock of one of the products.!');
+        toast.error(t('cart.notEnoughStock'));
       } else {
-        toast.error(`Error: ${errorMsg}`);
+        toast.error(t('cart.error', { error: errorMsg }));
       }
     }
   });
 
   const handleCheckout = () => {
     if (!user) {
-      toast.info('Please log in to proceed with your order.');
+      toast.info(t('cart.loginRequired'));
       if (onClose) onClose();
       navigate('/login');
       return;
@@ -67,8 +69,8 @@ export default function ShoppingCart({ onClose }: { onClose?: () => void }) {
         <div className="w-20 h-20 bg-white shadow-sm text-slate-300 rounded-full flex items-center justify-center mb-6">
           <ShoppingBag className="w-10 h-10" />
         </div>
-        <p className="text-slate-500 font-bold text-lg">A kosarad jelenleg üres.</p>
-        <p className="text-sm text-slate-400 mt-2">Itt az ideje választani valami finomat!</p>
+        <p className="text-slate-500 font-bold text-lg">{t('cart.emptyCart')}</p>
+        <p className="text-sm text-slate-400 mt-2">{t('cart.emptyCartSub')}</p>
       </div>
     );
   }
@@ -80,7 +82,7 @@ export default function ShoppingCart({ onClose }: { onClose?: () => void }) {
           <div key={item.product.id} className="flex items-center gap-4 p-4 bg-white rounded-2xl shadow-sm border border-gray-50 group">
             <div className="flex-1">
               <h4 className="font-bold text-slate-900 line-clamp-1">{item.product.name}</h4>
-              <p className="text-amber-500 font-black">{item.product.price} Ft</p>
+              <p className="text-amber-500 font-black">{item.product.price} {t('cart.currency')}</p>
             </div>
 
             <div className="flex items-center gap-1 bg-slate-50 rounded-xl p-1 border border-slate-100">
@@ -111,8 +113,8 @@ export default function ShoppingCart({ onClose }: { onClose?: () => void }) {
 
       <div className="p-6 bg-white border-t border-gray-100 shadow-[0_-10px_40px_rgba(0,0,0,0.03)] z-10">
         <div className="flex justify-between items-end mb-6">
-          <span className="font-bold text-slate-500">Összesen:</span>
-          <span className="font-black text-3xl text-slate-900">{getTotalPrice()} Ft</span>
+          <span className="font-bold text-slate-500">{t('cart.total')}</span>
+          <span className="font-black text-3xl text-slate-900">{getTotalPrice()} {t('cart.currency')}</span>
         </div>
 
         <button
@@ -121,9 +123,9 @@ export default function ShoppingCart({ onClose }: { onClose?: () => void }) {
           className="flex items-center justify-center gap-2 w-full bg-slate-900 hover:bg-amber-500 disabled:bg-slate-300 text-white font-bold py-4 rounded-2xl shadow-lg hover:shadow-amber-500/30 transition-all active:scale-95"
         >
           {createOrderMutation.isPending ? (
-            <><Loader2 className="w-6 h-6 animate-spin" /> Dolgozunk rajta...</>
+            <><Loader2 className="w-6 h-6 animate-spin" /> {t('cart.processing')}</>
           ) : (
-            'Tovább a rendeléshez'
+            t('cart.checkout')
           )}
         </button>
       </div>
