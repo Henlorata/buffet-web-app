@@ -25,6 +25,7 @@
   },
   "product": {
     "out_of_stock": "ELFOGYOTT",
+    "low_stock": "ALACSONY KÉSZLET: {{amount}} db!",
     "currency": "Ft",
     "remove_favorite": "Eltávolítás a kedvencekből",
     "add_favorite": "Hozzáadás a kedvencekhez",
@@ -34,7 +35,9 @@
     "added_to_favorites": "{{name}} hozzáadva a kedvencekhez!",
     "removed_from_favorites": "{{name}} eltávolítva a kedvencekből.",
     "added_to_cart": "{{name}} a kosárba került!",
-    "error_favorite": "Hiba történt a kedvencek módosításakor!"
+    "error_favorite": "Hiba történt a kedvencek módosításakor!",
+    "added_to_cart_multiple": "{{count}} db termék a kosárba rakva!",
+    "admin_view": "Nem elérhető adminoknak"
   },
   "cart": {
     "orderSuccess": "Rendelés leadva! A pultos már készíti is.",
@@ -47,7 +50,8 @@
     "total": "Összesen:",
     "currency": "Ft",
     "processing": "Dolgozunk rajta...",
-    "checkout": "Tovább a rendeléshez"
+    "checkout": "Tovább a rendeléshez",
+    "reorder": "Újrarendelés"
   },
   "home": {
     "heroBadge": "Friss és forró ételek minden nap",

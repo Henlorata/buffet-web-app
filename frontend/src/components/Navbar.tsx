@@ -43,12 +43,7 @@ export default function Navbar() {
         { name: t('nav.inventory'), path: '/products', icon: <Package className="w-5 h-5" /> },
         { name: t('nav.users'), path: '/users', icon: <UsersIcon className="w-5 h-5" /> },
         { name: t('nav.stats'), path: '/stats', icon: <TrendingUp className="w-5 h-5" /> },
-      ];
-    }
-
-    if (user?.role === 'BARTENDER') {
-      return [
-        { name: t('nav.kitchen'), path: '/bart-orders', icon: <ChefHat className="w-5 h-5" /> },
+        { name: t('nav.menu'), path: '/order', icon: <FileText className="w-5 h-5" /> },
       ];
     }
 
@@ -57,7 +52,11 @@ export default function Navbar() {
       { name: t('nav.menu'), path: '/order', icon: <FileText className="w-5 h-5" /> },
     ];
 
-    if (user?.role === 'CUSTOMER') {
+    if (user?.role === 'BARTENDER') {
+      links.push({ name: t('nav.kitchen'), path: '/bart-orders', icon: <ChefHat className="w-5 h-5" /> });
+    }
+
+    if (user?.role === 'CUSTOMER' || user?.role === 'BARTENDER') {
       links.push({ name: t('nav.orders'), path: '/orders', icon: <ShoppingBag className="w-5 h-5" /> });
     }
 
@@ -123,7 +122,7 @@ export default function Navbar() {
               </Link>
             )}
 
-            {(!user || user.role === 'CUSTOMER') && (
+            {(!user || user.role === 'CUSTOMER' || user.role === 'BARTENDER') && (
               <button
                 onClick={() => setIsCartOpen(true)}
                 className="relative flex items-center justify-center w-11 h-11 bg-white text-slate-600 hover:text-amber-500 hover:bg-amber-50 rounded-full transition shadow-sm border border-gray-100 group"
@@ -140,7 +139,7 @@ export default function Navbar() {
         </div>
       </header>
 
-      {(!user || user.role === 'CUSTOMER') && (
+      {(!user || user.role === 'CUSTOMER' || user.role === 'BARTENDER') && (
         <>
           <div
             className={`fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 transition-opacity duration-500 ${isCartOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
