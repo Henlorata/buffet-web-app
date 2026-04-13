@@ -24,7 +24,7 @@ services:
       - redis_data:/data
 
   backend:
-    build: ./backend
+    image: buffet-backend:latest
     container_name: buffet-backend
     restart: on-failure
     ports:
@@ -40,7 +40,7 @@ services:
       - redis
 
   frontend:
-    build: ./frontend
+    image: buffet-frontend:latest
     container_name: buffet-frontend
     restart: on-failure
     ports:
