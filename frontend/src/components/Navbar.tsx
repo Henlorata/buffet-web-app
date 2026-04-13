@@ -1,61 +1,64 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ShoppingBag, Utensils, User, FileText, X, Package, Users as UsersIcon, ChefHat, TrendingUp, LogOut } from 'lucide-react';
+import { ShoppingBag, Utensils, User, FileText, X, Package, Users as UsersIcon, ChefHat, TrendingUp, Languages, LogOut } from 'lucide-react';
 import { useCartStore } from '../store/cartStore';
 import { useAuthStore } from '../store/authStore';
 import ShoppingCart from './ShoppingCart';
 import NotificationCenter from './NotificationCenter';
-import {api} from "@/api/axiosInstance.ts";
-import {toast} from "sonner";
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 
 export default function Navbar() {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const cartItems = useCartStore((state) => state.items);
-  const user = useAuthStore((state) => state.user);
+  const { user, logout: logoutStore } = useAuthStore();
 
   const [isCartOpen, setIsCartOpen] = useState(false);
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
-
-  const handleLogout = async () => {
-    try {
-      const { logout } = useAuthStore.getState();
-      await api.post("/auth/logout");
-      await logout();
-      toast.success('Sikeresen kijelentkeztél!');
-      navigate("/home");
-    } catch (error) {
-      console.error("Logout error", error);
-      toast.error('Kijelentkezési hiba.');
-    }
-  };
 
   useEffect(() => {
     setIsCartOpen(false);
   }, [location.pathname]);
 
+  const toggleLanguage = () => {
+    const newLang = i18n.language === 'hu' ? 'en' : 'hu';
+    i18n.changeLanguage(newLang);
+  };
+
+  const handleLogout = async () => {
+    try {
+      logoutStore();
+      toast.success(t('nav.logout_success'));
+      navigate('/home');
+    } catch (error) {
+      console.error("Logout error", error);
+    }
+  };
+
   const getNavLinks = () => {
     if (user?.role === 'ADMIN') {
       return [
-        { name: 'Készletkezelő', path: '/products', icon: <Package className="w-5 h-5" /> },
-        { name: 'Felhasználók', path: '/users', icon: <UsersIcon className="w-5 h-5" /> },
-        { name: 'Statisztikák', path: '/stats', icon: <TrendingUp className="w-5 h-5" /> },
+        { name: t('nav.inventory'), path: '/products', icon: <Package className="w-5 h-5" /> },
+        { name: t('nav.users'), path: '/users', icon: <UsersIcon className="w-5 h-5" /> },
+        { name: t('nav.stats'), path: '/stats', icon: <TrendingUp className="w-5 h-5" /> },
       ];
     }
 
     if (user?.role === 'BARTENDER') {
       return [
-        { name: 'Konyhai Kijelző', path: '/bart-orders', icon: <ChefHat className="w-5 h-5" /> },
+        { name: t('nav.kitchen'), path: '/bart-orders', icon: <ChefHat className="w-5 h-5" /> },
       ];
     }
 
     const links = [
-      { name: 'Kezdőlap', path: '/home', icon: <Utensils className="w-5 h-5" /> },
-      { name: 'Menü & Rendelés', path: '/order', icon: <FileText className="w-5 h-5" /> },
+      { name: t('nav.home'), path: '/home', icon: <Utensils className="w-5 h-5" /> },
+      { name: t('nav.menu'), path: '/order', icon: <FileText className="w-5 h-5" /> },
     ];
 
     if (user?.role === 'CUSTOMER') {
-      links.push({ name: 'Rendeléseim', path: '/orders', icon: <ShoppingBag className="w-5 h-5" /> });
+      links.push({ name: t('nav.orders'), path: '/orders', icon: <ShoppingBag className="w-5 h-5" /> });
     }
 
     return links;
@@ -91,25 +94,32 @@ export default function Navbar() {
           </nav>
 
           <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+            <button
+              onClick={toggleLanguage}
+              className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 hover:bg-amber-100 text-slate-700 rounded-full transition-all text-xs font-black uppercase"
+            >
+              <Languages className="w-4 h-4" />
+              {i18n.language === 'hu' ? 'EN' : 'HU'}
+            </button>
+
             {user && <NotificationCenter />}
 
             {user ? (
               <div className="flex items-center gap-2">
-                <Link to="/profile" className="flex items-center justify-center w-11 h-11 bg-white text-slate-600 hover:text-amber-500 hover:bg-amber-50 rounded-full transition shadow-sm border border-gray-100" title="Profil">
+                <Link to="/profile" className="flex items-center justify-center w-11 h-11 bg-white text-slate-600 hover:text-amber-500 hover:bg-amber-50 rounded-full transition shadow-sm border border-gray-100" title={t('nav.profile')}>
                   <User className="w-5 h-5" />
                 </Link>
-
                 <button
                   onClick={handleLogout}
                   className="flex items-center justify-center w-11 h-11 bg-white text-red-500 hover:bg-red-50 rounded-full transition shadow-sm border border-gray-100"
-                  title="Kijelentkezés"
+                  title={t('nav.logout')}
                 >
                   <LogOut className="w-5 h-5" />
                 </button>
               </div>
             ) : (
-              <Link to="/login" className="hidden sm:inline-flex items-center justify-center bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold px-6 py-2.5 rounded-full transition shadow-md">
-                Bejelentkezés
+              <Link to="/login" className="hidden sm:inline-flex items-center justify-center bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold px-6 py-2.5 rounded-full transition shadow-md hover:shadow-lg">
+                {t('nav.login')}
               </Link>
             )}
 
@@ -140,7 +150,7 @@ export default function Navbar() {
             className={`fixed top-0 right-0 h-[100dvh] w-full sm:w-[450px] bg-slate-50 shadow-2xl z-50 transform transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] flex flex-col sm:rounded-l-3xl overflow-hidden ${isCartOpen ? 'translate-x-0' : 'translate-x-full'}`}
           >
             <div className="flex items-center justify-between p-6 bg-white border-b border-gray-100 z-10">
-              <h2 className="text-2xl font-black text-slate-900">Kosaram</h2>
+              <h2 className="text-2xl font-black text-slate-900">{t('nav.my_cart')}</h2>
               <button onClick={() => setIsCartOpen(false)} className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-colors">
                 <X className="w-6 h-6" />
               </button>

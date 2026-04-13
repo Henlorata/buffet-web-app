@@ -4,6 +4,7 @@ import { api } from '@/api/axiosInstance';
 import { ShoppingBag, Loader2, PackageX, Clock, ChefHat, CheckCircle2, XCircle, AlertCircle, ChevronDown, ChevronUp, ArrowRight, ReceiptText } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 interface OrderItem {
   id: string;
@@ -18,9 +19,12 @@ interface Order {
   status: 'NEW' | 'PREPARING' | 'READY' | 'COMPLETED' | 'CANCELLED';
   createdAt: string;
   items: OrderItem[];
+  cancellationReason?: string;
+  cancelledBy?: { fullName: string };
 }
 
 export default function OrdersPage() {
+  const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
@@ -32,33 +36,34 @@ export default function OrdersPage() {
       return response.data;
     },
   });
+
   useMutation({
     mutationFn: async (orderId: string) => {
       const response = await api.patch(`/orders/${orderId}/status`, { status: 'CANCELLED' });
       return response.data;
     },
     onSuccess: () => {
-      toast.success('Rendelés sikeresen törölve!');
+      toast.success(t('orders.deleteSuccess'));
       queryClient.invalidateQueries({ queryKey: ['my-orders'] });
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.error || 'Hiba történt a törlés során.');
+      toast.error(error.response?.data?.error || t('orders.deleteError'));
     }
   });
 
   const getStatusConfig = (status: Order['status']) => {
     switch (status) {
-      case 'NEW': return { label: 'Elfogadásra vár', color: 'bg-blue-100 text-blue-700 border-blue-200', icon: <Clock className="w-4 h-4" /> };
-      case 'PREPARING': return { label: 'Készül', color: 'bg-amber-100 text-amber-700 border-amber-200', icon: <ChefHat className="w-4 h-4" /> };
-      case 'READY': return { label: 'Átvehető!', color: 'bg-green-500 text-white border-green-600 animate-pulse', icon: <CheckCircle2 className="w-4 h-4" /> };
-      case 'COMPLETED': return { label: 'Teljesítve', color: 'bg-slate-100 text-slate-600 border-slate-200', icon: <CheckCircle2 className="w-4 h-4" /> };
-      case 'CANCELLED': return { label: 'Törölve', color: 'bg-red-50 text-red-600 border-red-100', icon: <XCircle className="w-4 h-4" /> };
-      default: return { label: 'Ismeretlen', color: 'bg-gray-100 text-gray-600', icon: <AlertCircle className="w-4 h-4" /> };
+      case 'NEW': return { label: t('orders.statusNew'), color: 'bg-blue-100 text-blue-700 border-blue-200', icon: <Clock className="w-4 h-4" /> };
+      case 'PREPARING': return { label: t('orders.statusPrep'), color: 'bg-amber-100 text-amber-700 border-amber-200', icon: <ChefHat className="w-4 h-4" /> };
+      case 'READY': return { label: t('orders.statusReady'), color: 'bg-green-500 text-white border-green-600 animate-pulse', icon: <CheckCircle2 className="w-4 h-4" /> };
+      case 'COMPLETED': return { label: t('orders.statusComp'), color: 'bg-slate-100 text-slate-600 border-slate-200', icon: <CheckCircle2 className="w-4 h-4" /> };
+      case 'CANCELLED': return { label: t('orders.statusCanc'), color: 'bg-red-50 text-red-600 border-red-100', icon: <XCircle className="w-4 h-4" /> };
+      default: return { label: t('orders.statusUnknown'), color: 'bg-gray-100 text-gray-600', icon: <AlertCircle className="w-4 h-4" /> };
     }
   };
 
   const formatDate = (dateString: string) => {
-    return new Intl.DateTimeFormat('hu-HU', {
+    return new Intl.DateTimeFormat(i18n.language, {
       year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
     }).format(new Date(dateString));
   };
@@ -67,7 +72,7 @@ export default function OrdersPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-amber-500 space-y-4">
         <Loader2 className="w-12 h-12 animate-spin" />
-        <p className="text-slate-500 font-bold">Rendelések betöltése...</p>
+        <p className="text-slate-500 font-bold">{t('orders.loading')}</p>
       </div>
     );
   }
@@ -76,8 +81,8 @@ export default function OrdersPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-red-500 space-y-4">
         <AlertCircle className="w-16 h-16" />
-        <h2 className="text-2xl font-black text-slate-900">Hiba történt!</h2>
-        <p className="text-slate-500 font-medium">Nem sikerült betölteni a rendeléseidet.</p>
+        <h2 className="text-2xl font-black text-slate-900">{t('orders.errorTitle')}</h2>
+        <p className="text-slate-500 font-medium">{t('orders.errorDesc')}</p>
       </div>
     );
   }
@@ -93,8 +98,8 @@ export default function OrdersPage() {
           <ReceiptText className="w-8 h-8" />
         </div>
         <div>
-          <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">Rendeléseim</h1>
-          <p className="text-slate-500 font-medium mt-1">Kövesd nyomon vagy nézd vissza a korábbi rendeléseidet</p>
+          <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">{t('orders.title')}</h1>
+          <p className="text-slate-500 font-medium mt-1">{t('orders.subtitle')}</p>
         </div>
       </div>
 
@@ -103,10 +108,10 @@ export default function OrdersPage() {
           <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6">
             <PackageX className="w-10 h-10 text-slate-400" />
           </div>
-          <h3 className="text-2xl font-black text-slate-900 mb-2">Még nem rendeltél semmit.</h3>
-          <p className="text-slate-500 mb-8 max-w-md font-medium">Látogass el a menübe, és válassz valami finomat magadnak!</p>
+          <h3 className="text-2xl font-black text-slate-900 mb-2">{t('orders.emptyTitle')}</h3>
+          <p className="text-slate-500 mb-8 max-w-md font-medium">{t('orders.emptyDesc')}</p>
           <button onClick={() => navigate('/order')} className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-8 py-3 rounded-xl transition-all shadow-md active:scale-95">
-            Tovább a menühöz
+            {t('orders.toMenuBtn')}
           </button>
         </div>
       ) : (
@@ -114,7 +119,7 @@ export default function OrdersPage() {
           {activeOrders.length > 0 && (
             <div className="space-y-6">
               <h2 className="text-2xl font-black text-slate-900 flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-amber-500 animate-pulse"></span> Folyamatban lévő
+                <span className="w-3 h-3 rounded-full bg-amber-500 animate-pulse"></span> {t('orders.inProgress')}
               </h2>
               <div className="grid gap-6">
                 {activeOrders.map((order) => {
@@ -123,7 +128,7 @@ export default function OrdersPage() {
                     <div key={order.id} className="bg-white rounded-3xl overflow-hidden shadow-lg shadow-slate-200/40 border border-slate-100 transition-all hover:shadow-xl hover:-translate-y-1">
                       <div className="bg-gradient-to-r from-slate-50 to-white p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
-                          <p className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">Azonosító: <span className="text-slate-900 bg-white px-2 py-0.5 rounded-md border border-slate-200 ml-1">#{order.id.split('-')[0]}</span></p>
+                          <p className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">{t('orders.idLabel')} <span className="text-slate-900 bg-white px-2 py-0.5 rounded-md border border-slate-200 ml-1">#{order.id.split('-')[0]}</span></p>
                           <p className="text-slate-500 font-medium text-sm flex items-center gap-1.5"><Clock className="w-4 h-4" /> {formatDate(order.createdAt)}</p>
                         </div>
                         <span className={`inline-flex items-center gap-2 px-5 py-2 rounded-full text-sm font-black border ${statusConfig.color} shadow-sm`}>
@@ -146,12 +151,12 @@ export default function OrdersPage() {
                         </div>
 
                         <div className="flex items-center gap-4 w-full sm:w-auto">
-                          <p className="font-black text-2xl text-slate-900 hidden sm:block">{order.totalAmount} Ft</p>
+                          <p className="font-black text-2xl text-slate-900 hidden sm:block">{order.totalAmount} {t('orders.currency')}</p>
                           <button
                             onClick={() => navigate(`/tracking/${order.id}`)}
                             className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-slate-900 hover:bg-amber-500 text-white font-bold px-6 py-3 rounded-xl transition-all shadow-md active:scale-95"
                           >
-                            Élő követés <ArrowRight className="w-5 h-5" />
+                            {t('orders.liveTracking')} <ArrowRight className="w-5 h-5" />
                           </button>
                         </div>
                       </div>
@@ -164,9 +169,9 @@ export default function OrdersPage() {
 
           {pastOrders.length > 0 && (
             <div className="space-y-4 pt-8 border-t-2 border-slate-100 border-dashed">
-              <h2 className="text-xl font-black text-slate-900 mb-4">Korábbi rendelések</h2>
+              <h2 className="text-xl font-black text-slate-900 mb-4">{t('orders.pastOrders')}</h2>
               <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-                {pastOrders.map((order, index) => {
+                {pastOrders.map((order) => {
                   const isExpanded = expandedOrderId === order.id;
                   const statusConfig = getStatusConfig(order.status);
 
@@ -193,7 +198,7 @@ export default function OrdersPage() {
                         </div>
 
                         <div className="flex items-center justify-between w-full sm:w-auto gap-6 pl-14 sm:pl-0">
-                          <span className="font-black text-lg text-slate-900">{order.totalAmount} Ft</span>
+                          <span className="font-black text-lg text-slate-900">{order.totalAmount} {t('orders.currency')}</span>
                           {isExpanded ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
                         </div>
                       </button>
@@ -203,23 +208,23 @@ export default function OrdersPage() {
                           <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm space-y-3">
                             {order.status === 'CANCELLED' && (
                               <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-xl">
-                                <p className="text-xs font-black text-red-400 uppercase tracking-widest">Törlés adatai</p>
+                                <p className="text-xs font-black text-red-400 uppercase tracking-widest">{t('orders.cancelData')}</p>
                                 <p className="text-sm text-red-700 font-bold mt-1">
-                                  Indok: <span className="font-normal italic">{order.cancellationReason || 'Nincs megadva'}</span>
+                                  {t('orders.reasonLabel')} <span className="font-normal italic">{order.cancellationReason || t('orders.noReason')}</span>
                                 </p>
                                 <p className="text-[10px] text-red-400 mt-1">
-                                  Törölte: {order.cancelledBy?.fullName || 'Vásárló'}
+                                  {t('orders.cancelledByLabel')} {order.cancelledBy?.fullName || t('orders.customer')}
                                 </p>
                               </div>
                             )}
-                            <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 border-b border-slate-100 pb-2">Rendelés tételei</h4>
+                            <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 border-b border-slate-100 pb-2">{t('orders.orderItems')}</h4>
                             {order.items.map(item => (
                               <div key={item.id} className="flex justify-between items-center text-sm">
                                 <div className="flex items-center gap-3">
                                   <span className="font-black text-slate-900 bg-slate-100 px-2 py-0.5 rounded">{item.quantity}x</span>
                                   <span className="font-bold text-slate-700">{item.product.name}</span>
                                 </div>
-                                <span className="font-bold text-slate-400">{item.unitPriceAtPurchase * item.quantity} Ft</span>
+                                <span className="font-bold text-slate-400">{item.unitPriceAtPurchase * item.quantity} {t('orders.currency')}</span>
                               </div>
                             ))}
                           </div>

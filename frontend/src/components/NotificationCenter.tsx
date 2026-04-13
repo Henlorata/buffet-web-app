@@ -1,8 +1,10 @@
 import { Bell, BellDot, Trash2 } from 'lucide-react';
 import { useNotificationStore } from '../store/notificationStore';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { useTranslation } from 'react-i18next';
 
 export default function NotificationCenter() {
+  const { t, i18n } = useTranslation();
   const { notifications, markAsRead, clearAll } = useNotificationStore();
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -20,14 +22,14 @@ export default function NotificationCenter() {
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0 bg-white rounded-2xl shadow-2xl border-slate-100 overflow-hidden" align="end">
         <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-          <h3 className="font-black text-slate-900">Értesítések</h3>
+          <h3 className="font-black text-slate-900">{t('notif.title')}</h3>
           <div className="flex gap-2">
             <button onClick={clearAll} className="text-slate-400 hover:text-red-500 transition-colors"><Trash2 className="w-4 h-4" /></button>
           </div>
         </div>
         <div className="max-h-96 overflow-y-auto">
           {notifications.length === 0 ? (
-            <p className="p-8 text-center text-sm text-slate-400 font-medium">Nincs új értesítésed.</p>
+            <p className="p-8 text-center text-sm text-slate-400 font-medium">{t('notif.empty')}</p>
           ) : (
             notifications.map(n => (
               <div
@@ -41,7 +43,7 @@ export default function NotificationCenter() {
                 </div>
                 <p className="text-xs text-slate-600 mt-1 leading-relaxed">{n.message}</p>
                 <p className="text-[10px] text-slate-400 mt-2 font-medium">
-                  {new Intl.DateTimeFormat('hu-HU', { hour: '2-digit', minute: '2-digit' }).format(n.createdAt)}
+                  {new Intl.DateTimeFormat(i18n.language === 'hu' ? 'hu-HU' : 'en-US', { hour: '2-digit', minute: '2-digit' }).format(n.createdAt)}
                 </p>
               </div>
             ))
