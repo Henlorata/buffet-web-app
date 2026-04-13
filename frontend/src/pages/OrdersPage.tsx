@@ -1,16 +1,24 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/axiosInstance';
-import { ShoppingBag, Loader2, PackageX, Clock, ChefHat, CheckCircle2, XCircle, AlertCircle, ChevronDown, ChevronUp, ArrowRight, ReceiptText } from 'lucide-react';
+import { ShoppingBag, Loader2, PackageX, Clock, ChefHat, CheckCircle2, XCircle, AlertCircle, ChevronDown, ChevronUp, ArrowRight, ReceiptText, RefreshCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useCartStore } from '@/store/cartStore';
 
 interface OrderItem {
   id: string;
   quantity: number;
   unitPriceAtPurchase: number;
-  product: { name: string; imageUrl: string | null };
+  product: {
+    id: string;
+    name: string;
+    imageUrl: string | null;
+    price: number;
+    isActive: boolean;
+    stockQuantity: number;
+  };
 }
 
 interface Order {
@@ -28,6 +36,7 @@ export default function OrdersPage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+  const addItem = useCartStore((state) => state.addItem);
 
   const { data: orders, isLoading, isError } = useQuery<Order[]>({
     queryKey: ['my-orders'],
@@ -50,6 +59,28 @@ export default function OrdersPage() {
       toast.error(error.response?.data?.error || t('orders.deleteError'));
     }
   });
+
+  const handleReorder = (items: OrderItem[]) => {
+    let successCount = 0;
+    let failCount = 0;
+
+    items.forEach((item) => {
+      if (item.product.isActive && item.product.stockQuantity >= item.quantity) {
+        addItem(item.product as any, item.quantity);
+        successCount++;
+      } else {
+        failCount++;
+      }
+    });
+
+    if (successCount > 0) {
+      toast.success(t('product.added_to_cart_multiple', { count: successCount }));
+      navigate('/order');
+    }
+    if (failCount > 0) {
+      toast.warning(t('cart.notEnoughStock'));
+    }
+  };
 
   const getStatusConfig = (status: Order['status']) => {
     switch (status) {
@@ -227,6 +258,14 @@ export default function OrdersPage() {
                                 <span className="font-bold text-slate-400">{item.unitPriceAtPurchase * item.quantity} {t('orders.currency')}</span>
                               </div>
                             ))}
+                            <div className="pt-4 mt-2 border-t border-slate-100 flex justify-end">
+                              <button
+                                onClick={() => handleReorder(order.items)}
+                                className="flex items-center gap-2 bg-amber-50 hover:bg-amber-100 text-amber-600 font-bold px-5 py-2.5 rounded-xl transition-colors text-sm shadow-sm"
+                              >
+                                <RefreshCcw className="w-4 h-4" /> {t('cart.reorder')}
+                              </button>
+                            </div>
                           </div>
                         </div>
                       )}

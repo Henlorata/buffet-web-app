@@ -25,6 +25,7 @@
   },
   "product": {
     "out_of_stock": "OUT OF STOCK",
+    "low_stock": "LOW STOCK: {{amount}} remaining!",
     "currency": "HUF",
     "remove_favorite": "Remove from favorites",
     "add_favorite": "Add to favorites",
@@ -34,7 +35,8 @@
     "added_to_favorites": "{{name}} added to favorites!",
     "removed_from_favorites": "{{name}} removed from favorites.",
     "added_to_cart": "{{name}} added to cart!",
-    "error_favorite": "An error occurred while modifying favorites!"
+    "error_favorite": "An error occurred while modifying favorites!",
+    "added_to_cart_multiple": "{{count}} products added to cart!"
   },
   "cart": {
     "orderSuccess": "Order placed! The bartender is already preparing it.",
@@ -47,7 +49,8 @@
     "total": "Total:",
     "currency": "HUF",
     "processing": "Working on it...",
-    "checkout": "Proceed to checkout"
+    "checkout": "Proceed to checkout",
+    "reorder": "Reorder"
   },
   "home": {
     "heroBadge": "Fresh and hot food every day",

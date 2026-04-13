@@ -64,10 +64,15 @@ export default function ProductCard({ product }: ProductCardProps) {
           )}
         </div>
 
-        <div className="absolute top-6 left-6 flex gap-2">
-          {!product.isActive && (
+        <div className="absolute top-6 left-6 flex flex-col items-start gap-2">
+          {(!product.isActive || product.stockQuantity < 1) && (
             <span className="bg-red-500/95 backdrop-blur-md text-white text-xs font-black px-4 py-2 rounded-full shadow-lg">
               {t('product.out_of_stock')}
+            </span>
+          )}
+          {(product.isActive && product.stockQuantity > 0 && product.stockQuantity <= 5) && (
+            <span className="bg-amber-500/95 backdrop-blur-md text-white text-xs font-black px-4 py-2 rounded-full shadow-lg animate-[pulse_2s_ease-in-out_infinite]">
+              {t('product.low_stock', {amount: product.stockQuantity})}
             </span>
           )}
         </div>
