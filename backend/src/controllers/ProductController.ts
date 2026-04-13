@@ -53,7 +53,7 @@ export const updateCategory = async (req: Request, res: Response): Promise<void>
   try {
     if (req.user?.role !== "ADMIN") { res.status(403).json({ error: "Csak adminisztrátor módosíthat kategóriát!" }); return; }
 
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const { name } = categorySchema.parse(req.body);
     const slug = name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
 
@@ -97,7 +97,7 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
 
     res.status(201).json({ message: "Termék létrehozva", product: newProduct });
   } catch (error: any) {
-    if (error instanceof z.ZodError) res.status(400).json({ error: "Validációs hiba", details: error.errors });
+    if (error instanceof z.ZodError) res.status(400).json({ error: "Validációs hiba", details: (error as z.ZodError).format() });
     else res.status(500).json({ error: "Szerver hiba" });
   }
 };
@@ -107,7 +107,7 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
   try {
     if (req.user?.role !== "ADMIN") { res.status(403).json({ error: "Csak adminisztrátor módosíthat terméket!" }); return; }
 
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const data = updateProductSchema.parse(req.body);
 
     const updatedProduct = await prisma.product.update({
@@ -120,7 +120,7 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
 
     res.status(200).json({ message: "Termék frissítve", product: updatedProduct });
   } catch (error: any) {
-    if (error instanceof z.ZodError) res.status(400).json({ error: "Validációs hiba", details: error.errors });
+    if (error instanceof z.ZodError) res.status(400).json({ error: "Validációs hiba", details: (error as z.ZodError).format() });
     else res.status(500).json({ error: "Szerver hiba" });
   }
 };
@@ -133,7 +133,7 @@ export const deleteCategory = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
 
     await prisma.$transaction(async (tx) => {
       await tx.product.deleteMany({ where: { categoryId: id } });
@@ -153,7 +153,7 @@ export const deleteCategory = async (req: Request, res: Response): Promise<void>
 // POST /api/products/:id/favorite
 export const toggleFavorite = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id: productId } = req.params;
+    const { id: productId } = req.params as { id: string };
     const userId = req.user!.userId;
 
     const existingFavorite = await prisma.favorite.findUnique({
