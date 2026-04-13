@@ -241,7 +241,7 @@ export const updateUserRole = async (req: Request, res: Response): Promise<void>
       select: { id: true, fullName: true, email: true, role: true }
     });
 
-    res.status(200).json({ message: "Szerepkör frissítve", user: updatedProduct });
+    res.status(200).json({ message: "Szerepkör frissítve", user: updatedUser });
   } catch (error) {
     res.status(500).json({ error: "Szerver hiba" });
   }
