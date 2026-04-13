@@ -176,7 +176,7 @@ export const updateOrderStatus = async (req: Request, res: Response): Promise<vo
       }
       else if (role === "BARTENDER") {
         if (order.status !== "NEW") {
-          if (adminCode !== "12345" && role !== "ADMIN") {
+          if (adminCode !== process.env.ADMIN_CANCELLATION_CODE && role !== "ADMIN") {
             res.status(403).json({ error: "Elfogadott rendelés törléséhez műszakvezetői kód szükséges!" });
             return;
           }
