@@ -228,7 +228,7 @@ export const updateUserRole = async (req: Request, res: Response): Promise<void>
   try {
     if (req.user?.role !== "ADMIN") { res.status(403).json({ error: "Nincs jogosultságod!" }); return; }
 
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const { role } = req.body;
 
     if (!["ADMIN", "BARTENDER", "CUSTOMER"].includes(role)) {
@@ -277,7 +277,7 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
 
     res.status(200).json({ message: "Profil sikeresen frissítve", user: updatedUser });
   } catch (error: any) {
-    if (error instanceof z.ZodError) res.status(400).json({ error: "Validációs hiba", details: error.errors });
+    if (error instanceof z.ZodError) res.status(400).json({ error: "Validációs hiba", details: (error as z.ZodError).format() });
     else res.status(500).json({ error: "Szerver hiba" });
   }
 };
@@ -307,7 +307,7 @@ export const changePassword = async (req: Request, res: Response): Promise<void>
 
     res.status(200).json({ message: "Jelszó sikeresen megváltoztatva!" });
   } catch (error: any) {
-    if (error instanceof z.ZodError) res.status(400).json({ error: "Validációs hiba", details: error.errors });
+    if (error instanceof z.ZodError) res.status(400).json({ error: "Validációs hiba", details: (error as z.ZodError).format() });
     else res.status(500).json({ error: "Szerver hiba" });
   }
 };

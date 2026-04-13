@@ -95,7 +95,7 @@ export const createOrder = async (
     if (error instanceof z.ZodError) {
       res
         .status(400)
-        .json({ error: "Validation failed", details: error.errors });
+        .json({ error: "Validation failed", details: (error as z.ZodError).format() });
     } else if (
       error.message.includes("Insufficient stock") ||
       error.message.includes("Product not found")
@@ -153,7 +153,7 @@ export const getOrders = async (req: Request, res: Response): Promise<void> => {
 // PATCH /api/orders/:id/status
 export const updateOrderStatus = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const { userId, role } = req.user!;
     const { status, reason, adminCode } = updateStatusSchema.parse(req.body);
 
@@ -176,7 +176,7 @@ export const updateOrderStatus = async (req: Request, res: Response): Promise<vo
       }
       else if (role === "BARTENDER") {
         if (order.status !== "NEW") {
-          if (adminCode !== process.env.ADMIN_CANCELLATION_CODE && role !== "ADMIN") {
+          if (adminCode !== process.env.ADMIN_CANCELLATION_CODE) {
             res.status(403).json({ error: "Elfogadott rendelés törléséhez műszakvezetői kód szükséges!" });
             return;
           }
@@ -212,7 +212,7 @@ export const updateOrderStatus = async (req: Request, res: Response): Promise<vo
     res.status(200).json({ message: "Státusz sikeresen frissítve" });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      res.status(400).json({ error: "Validációs hiba", details: error.errors });
+      res.status(400).json({ error: "Validációs hiba", details: (error as z.ZodError).format() });
     } else {
       console.error("[Update Order Error]:", error);
       res.status(500).json({ error: "Belső szerver hiba" });
