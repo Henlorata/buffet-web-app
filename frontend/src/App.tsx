@@ -100,7 +100,7 @@ export default function App() {
           </main>
           <Footer />
         </div>
-        <Toaster richColors position="top-center" />
+        <Toaster richColors position="bottom-right" closeButton />
       </Router>
     </QueryClientProvider>
   );

@@ -1,4 +1,4 @@
-import { Plus, Heart } from 'lucide-react';
+import { Plus, Heart, XCircle } from 'lucide-react';
 import { useCartStore } from '../store/cartStore';
 import { useAuthStore } from '../store/authStore';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -64,10 +64,15 @@ export default function ProductCard({ product }: ProductCardProps) {
           )}
         </div>
 
-        <div className="absolute top-6 left-6 flex gap-2">
-          {!product.isActive && (
+        <div className="absolute top-6 left-6 flex flex-col items-start gap-2">
+          {(!product.isActive || product.stockQuantity < 1) && (
             <span className="bg-red-500/95 backdrop-blur-md text-white text-xs font-black px-4 py-2 rounded-full shadow-lg">
               {t('product.out_of_stock')}
+            </span>
+          )}
+          {(product.isActive && product.stockQuantity > 0 && product.stockQuantity <= 5) && (
+            <span className="bg-amber-500/95 backdrop-blur-md text-white text-xs font-black px-4 py-2 rounded-full shadow-lg animate-[pulse_2s_ease-in-out_infinite]">
+              {t('product.low_stock', {amount: product.stockQuantity})}
             </span>
           )}
         </div>
@@ -107,11 +112,19 @@ export default function ProductCard({ product }: ProductCardProps) {
 
         <button
           onClick={handleAddToCart}
-          disabled={!product.isActive || product.stockQuantity < 1}
+          disabled={!product.isActive || product.stockQuantity < 1 || user?.role === 'ADMIN'}
           className="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-900 text-slate-900 hover:text-white disabled:bg-slate-50 disabled:text-slate-300 font-bold py-4 rounded-2xl transition-all duration-300 active:scale-95"
         >
-          <Plus className="w-5 h-5" />
-          {product.isActive && product.stockQuantity > 0 ? t('product.add_to_cart') : t('product.unavailable')}
+          {user?.role === 'ADMIN' ? (
+            <span className="flex items-center gap-2 line-through opacity-50">
+              <XCircle className="w-5 h-5" /> {t('product.admin_view') || 'Admin nézet'}
+            </span>
+          ) : (
+            <>
+              <Plus className="w-5 h-5" />
+              {product.isActive && product.stockQuantity > 0 ? t('product.add_to_cart') : t('product.unavailable')}
+            </>
+          )}
         </button>
       </div>
     </div>

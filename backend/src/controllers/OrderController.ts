@@ -126,7 +126,7 @@ export const getOrders = async (req: Request, res: Response): Promise<void> => {
         include: {
           user: { select: { fullName: true } },
           cancelledBy: { select: { fullName: true } },
-          items: { include: { product: { select: { name: true, imageUrl: true } } } },
+          items: { include: { product: { select: { id: true, name: true, imageUrl: true, price: true, isActive: true, stockQuantity: true } } } },
           handledBy: { select: { fullName: true } },
         },
         orderBy: role === "CUSTOMER" ? { createdAt: "desc" } : { createdAt: "asc" },
@@ -137,9 +137,7 @@ export const getOrders = async (req: Request, res: Response): Promise<void> => {
         where: { userId },
         include: {
           cancelledBy: { select: { fullName: true } },
-          items: {
-            include: { product: { select: { name: true, imageUrl: true } } },
-          },
+          items: { include: { product: { select: { id: true, name: true, imageUrl: true, price: true, isActive: true, stockQuantity: true } } } },
         },
         orderBy: { createdAt: "desc" },
       });
@@ -178,7 +176,7 @@ export const updateOrderStatus = async (req: Request, res: Response): Promise<vo
       }
       else if (role === "BARTENDER") {
         if (order.status !== "NEW") {
-          if (adminCode !== "12345" && role !== "ADMIN") {
+          if (adminCode !== process.env.ADMIN_CANCELLATION_CODE && role !== "ADMIN") {
             res.status(403).json({ error: "Elfogadott rendelés törléséhez műszakvezetői kód szükséges!" });
             return;
           }
